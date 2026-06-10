@@ -88,7 +88,7 @@ extend-exclude = [
     ".claude",
     ".pytest_cache",
     ".venv311",
-    "files (6)",
+    "files*",
     "stage5",
 ]
 

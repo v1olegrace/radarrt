@@ -38,3 +38,7 @@ Use `data/outputs_2024` as the initial analytical mart.
 The offer (`cursos_rt_realizados`) is real SIA-AR 2024. Incidence is INCA 2026.
 Capacity is an estimated UF allocation summing to 363 LINACs; it is explicitly
 marked as `estimado (parque publicado)` in `procedencia.csv`.
+
+Offer is attributed by treatment establishment UF (`AP_UFMUN`), not patient
+residence. Use national totals freely; read UF rankings as treatment-location
+rankings until a residence-attributed mart is curated.

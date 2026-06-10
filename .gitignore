@@ -35,4 +35,5 @@ Thumbs.db
 
 # Local delivery/drop folders already consolidated into src/, app/ and tests/
 stage5/
-files (6)/
+files*/
+files (*)/

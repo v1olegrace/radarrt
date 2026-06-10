@@ -147,6 +147,10 @@ an estimated UF allocation that sums to 363 LINACs and is marked as
 `estimado (parque publicado)` in `procedencia.csv`. Treat it as exploration and
 sensitivity input, not as a real census by UF.
 
+SIA-AR offer is attributed by UF of treatment establishment (`AP_UFMUN`), not by
+patient residence. State rankings therefore describe where treatment happened;
+residence-based attribution is the main next data upgrade.
+
 ## Quality Gates
 
 ```bash

@@ -93,7 +93,10 @@ def parse(pergunta: str) -> Intent:
     ufs = _detectar_ufs(pergunta, texto)
     regiao = _detectar_regiao(texto)
     grade = _detectar_grade(texto)
-    quer_total = any(palavra in texto for palavra in _PALAVRAS_TOTAL)
+    quer_total = any(
+        re.search(rf"\b{re.escape(palavra)}\b", texto)
+        for palavra in _PALAVRAS_TOTAL
+    )
     quer_ranking = any(
         re.search(rf"\b{palavra}\b", texto)
         for palavra in _PALAVRAS_DESC + _PALAVRAS_ASC
@@ -114,7 +117,7 @@ def parse(pergunta: str) -> Intent:
             ufs=ufs,
         )
 
-    if len(ufs) == 1 and not quer_total:
+    if len(ufs) == 1:
         return Intent(
             tipo="valor_uf",
             metrica=metrica or schemas.COL_DEMANDA_REPRIMIDA,

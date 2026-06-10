@@ -19,3 +19,4 @@ geopandas>=1.0       # malhas IBGE (UF / regiao de saude)
 
 # Dev
 pytest>=8.0
+ruff>=0.8.0

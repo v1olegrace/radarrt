@@ -16,11 +16,17 @@ _REGIOES_PERMITIDAS = frozenset(geo.UF_PARA_REGIAO.values())
 
 _PROIBIDO = re.compile(
     r"\b(insert|update|delete|drop|alter|create|attach|copy|pragma|"
-    r"replace|truncate|grant|revoke|vacuum|merge|union|except|intersect)\b",
+    r"replace|truncate|grant|revoke|vacuum|merge|union|except|intersect|"
+    r"install|load|load_extension|read_csv(?:_auto)?|read_parquet|"
+    r"read_json(?:_auto)?|read_text)\b",
     re.IGNORECASE,
 )
 _REFERENCIA_TABELA = re.compile(
     r"\b(?:from|join)\s+([a-zA-Z_][\w]*)",
+    re.IGNORECASE,
+)
+_JOIN_POR_VIRGULA = re.compile(
+    rf"\bfrom\s+{TABELA}(?:\s+(?:as\s+)?[a-zA-Z_]\w*)?\s*,",
     re.IGNORECASE,
 )
 
@@ -40,6 +46,8 @@ def validar_select(sql: str) -> str:
         raise SQLInvalido("apenas SELECT e permitido")
     if _PROIBIDO.search(limpo):
         raise SQLInvalido("palavra-chave proibida na query")
+    if _JOIN_POR_VIRGULA.search(limpo):
+        raise SQLInvalido("joins por virgula nao sao permitidos")
 
     tabelas = _REFERENCIA_TABELA.findall(limpo)
     if not tabelas:

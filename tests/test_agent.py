@@ -60,6 +60,12 @@ def test_parse_ranking_ascendente() -> None:
     assert intent.n == 3
 
 
+def test_total_usa_palavra_inteira() -> None:
+    intent = I.parse("demanda de paisagem")
+    assert intent.metrica == "demanda_rt_sus"
+    assert intent.tipo != "agregado"
+
+
 def test_parse_valor_uf_por_nome() -> None:
     intent = I.parse("Qual o deficit de aceleradores em Tocantins?")
     assert intent.tipo == "valor_uf"
@@ -117,6 +123,15 @@ def test_agregado_nacional() -> None:
     assert int(resposta.resultado.iloc[0]["total"]) == (
         51042 + 21491 + 19742 + 11940 + 8688 + 2000 + 800
     )
+
+
+def test_total_com_uf_respeita_filtro_da_uf() -> None:
+    resposta = core.responder_pergunta("demanda total de SP", _conn())
+
+    assert resposta.intent.tipo == "valor_uf"
+    assert resposta.intent.ufs == ["SP"]
+    assert "WHERE uf = 'SP'" in resposta.sql
+    assert int(resposta.resultado.iloc[0]["demanda_rt_sus"]) == 132000
 
 
 def test_comparacao_executa() -> None:
@@ -195,3 +210,24 @@ def test_build_sql_bloqueia_regiao_fora_da_allowlist() -> None:
 def test_validador_bloqueia_union() -> None:
     with pytest.raises(SQLInvalido):
         S.validar_select("SELECT uf FROM indicadores UNION SELECT 1")
+
+
+def test_validador_bloqueia_join_por_virgula() -> None:
+    invalidos = [
+        "SELECT * FROM indicadores, outra",
+        "SELECT * FROM indicadores AS i, outra AS o",
+    ]
+    for ruim in invalidos:
+        with pytest.raises(SQLInvalido):
+            S.validar_select(ruim)
+
+
+def test_validador_bloqueia_funcoes_de_leitura_duckdb() -> None:
+    invalidos = [
+        "SELECT read_csv_auto('segredo.csv') FROM indicadores",
+        "SELECT read_parquet('segredo.parquet') FROM indicadores",
+        "SELECT load_extension('httpfs') FROM indicadores",
+    ]
+    for ruim in invalidos:
+        with pytest.raises(SQLInvalido):
+            S.validar_select(ruim)

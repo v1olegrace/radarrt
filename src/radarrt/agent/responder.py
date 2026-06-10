@@ -24,6 +24,8 @@ def _num(valor: object) -> str:
         return "sem dado"
     if isinstance(valor, float) and math.isnan(valor):
         return "sem dado"
+    if isinstance(valor, float) and math.isinf(valor):
+        return "infinito"
     if isinstance(valor, float) and not valor.is_integer():
         return f"{valor:,.1f}".replace(",", ".")
     return f"{int(valor):,}".replace(",", ".")
