@@ -54,7 +54,7 @@ def test_params_sao_validados_imutaveis_e_definem_tres_cenarios() -> None:
     assert params.fracao_efetiva_rt == pytest.approx(0.4)
     assert set(CENARIOS) == {"conservador", "base", "superior"}
     with pytest.raises(FrozenInstanceError):
-        params.rur = 0.7  # type: ignore[misc]
+        params.rur = 0.7
     with pytest.raises(ValueError):
         Params(rur=0)
     with pytest.raises(ValueError):
@@ -133,15 +133,3 @@ def test_resumo_nacional_agrega_resultados_regionais() -> None:
     assert resumo["linacs_instalados"] == 1
     assert resumo["lsi_nacional"] == pytest.approx(266.6667)
     assert resumo["deficit_linacs"] == 2
-
-
-def _rodar_todos() -> None:
-    testes = [valor for nome, valor in globals().items() if nome.startswith("test_")]
-    for teste in testes:
-        teste()
-        print(f"ok  {teste.__name__}")
-    print(f"\n{len(testes)} testes passaram.")
-
-
-if __name__ == "__main__":
-    _rodar_todos()

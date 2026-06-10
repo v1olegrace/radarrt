@@ -7,8 +7,8 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from radarrt import construir_base, schemas
-from radarrt.sources import cnes, inca, sia
+from radarrt import construir_base, geo, schemas
+from radarrt.sources import cnes, inca, parque, sia
 
 
 def _raw_sia_ar() -> pd.DataFrame:
@@ -169,7 +169,10 @@ def test_pipeline_registra_uf_sem_arquivo_sia(
         mes_cnes=5,
     )
 
-    assert any("AC" in aviso and "SIA-AR sem arquivos" in aviso for aviso in base.procedencia.avisos)
+    assert any(
+        "AC" in aviso and "SIA-AR sem arquivos" in aviso
+        for aviso in base.procedencia.avisos
+    )
 
 
 def test_pipeline_fallback_desativado_propaga_falha() -> None:
@@ -177,28 +180,17 @@ def test_pipeline_fallback_desativado_propaga_falha() -> None:
         construir_base(ano=2024, ufs=["SP"], meses=[1], permitir_fallback=False)
 
 
-def _rodar_todos() -> None:
-    testes = [valor for nome, valor in globals().items() if nome.startswith("test_")]
-    sem_fixtures = [teste for teste in testes if teste.__code__.co_argcount == 0]
-    for teste in sem_fixtures:
-        teste()
-        print(f"ok  {teste.__name__}")
-    print(f"\n{len(sem_fixtures)} testes sem fixtures passaram.")
-
-
 # ---------------------------------------------------------------------------
 # Passo 2b - parque publicado (RT2030) e check de benchmark
 # ---------------------------------------------------------------------------
-def _csv_parque_completo(tmp_path):
-    from radarrt import geo
+def _csv_parque_completo(tmp_path: Path) -> Path:
     linhas = {"uf": list(geo.UFS), "linacs_sus": [13] * len(geo.UFS)}
     caminho = tmp_path / "parque.csv"
     pd.DataFrame(linhas).to_csv(caminho, index=False)
     return caminho  # 27 * 13 = 351 (~ benchmark 360)
 
 
-def test_parque_normaliza_e_valida():
-    from radarrt.sources import parque
+def test_parque_normaliza_e_valida() -> None:
     df = parque.normalizar_parque(
         pd.DataFrame({"uf": ["SP", "pa "], "linacs_sus": [5, 2], "fonte": ["x", "y"]})
     )
@@ -206,17 +198,15 @@ def test_parque_normaliza_e_valida():
     assert df.set_index("uf").loc["PA", "linacs_sus"] == 2
 
 
-def test_parque_rejeita_valor_ausente():
-    from radarrt.sources import parque
+def test_parque_rejeita_valor_ausente() -> None:
     with pytest.raises(ValueError, match="preencha o template"):
         parque.normalizar_parque(pd.DataFrame({"uf": ["SP"], "linacs_sus": [None]}))
 
 
-def test_benchmark_pega_transicao_cnes():
-    from radarrt.sources import parque
-    assert parque.checar_benchmark(27) is not None      # 27 vs ~360 -> avisa
-    assert parque.checar_benchmark(360) is None          # no alvo -> ok
-    assert parque.checar_benchmark(351) is None          # dentro da tolerancia
+def test_benchmark_pega_transicao_cnes() -> None:
+    assert parque.checar_benchmark(27) is not None  # 27 vs ~360 -> avisa
+    assert parque.checar_benchmark(360) is None  # no alvo -> ok
+    assert parque.checar_benchmark(351) is None  # dentro da tolerancia
 
 
 def test_pipeline_fonte_parque_publicado(
@@ -252,10 +242,6 @@ def test_pipeline_parque_estimado_nao_vira_real(
     assert any("estimados" in aviso for aviso in base.procedencia.avisos)
 
 
-def test_pipeline_fonte_invalida():
+def test_pipeline_fonte_invalida() -> None:
     with pytest.raises(ValueError, match="fonte_capacidade"):
         construir_base(ano=2026, fonte_capacidade="inexistente")
-
-
-if __name__ == "__main__":
-    _rodar_todos()
