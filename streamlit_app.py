@@ -136,17 +136,25 @@ def render_visao_geral(mart: dict[str, pd.DataFrame]) -> None:
         render_mapa(indicadores)
     with direita:
         st.subheader("Top UFs por prioridade")
+        ranking_demo = ranking[
+            [
+                "uf",
+                "regiao",
+                "demanda_reprimida",
+                "deficit_linacs",
+                "lsi",
+                "grade",
+            ]
+        ].rename(
+            columns={
+                "regiao": "regiao",
+                "demanda_reprimida": "fila",
+                "deficit_linacs": "deficit",
+                "lsi": "LSI",
+            }
+        )
         st.dataframe(
-            ranking[
-                [
-                    "uf",
-                    "regiao",
-                    "demanda_reprimida",
-                    "deficit_linacs",
-                    "lsi",
-                    "grade",
-                ]
-            ],
+            ranking_demo,
             hide_index=True,
             use_container_width=True,
         )
