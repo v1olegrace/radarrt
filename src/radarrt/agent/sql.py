@@ -4,13 +4,16 @@ from __future__ import annotations
 
 import re
 
+from .. import geo, schemas
 from .intent import Intent
 
 TABELA = "indicadores"
+_COLUNAS_PERMITIDAS = frozenset({*schemas.COLUNAS_ENTRADA, *schemas.COLUNAS_SAIDA})
+_REGIOES_PERMITIDAS = frozenset(geo.UF_PARA_REGIAO.values())
 
 _PROIBIDO = re.compile(
     r"\b(insert|update|delete|drop|alter|create|attach|copy|pragma|"
-    r"replace|truncate|grant|revoke|vacuum|merge)\b",
+    r"replace|truncate|grant|revoke|vacuum|merge|union|except|intersect)\b",
     re.IGNORECASE,
 )
 _REFERENCIA_TABELA = re.compile(
@@ -43,8 +46,20 @@ def validar_select(sql: str) -> str:
     return limpo
 
 
+def _validar_campos(intent: Intent) -> None:
+    """Aplica allowlist ao Intent antes de qualquer interpolacao em SQL."""
+    if intent.metrica is not None and intent.metrica not in _COLUNAS_PERMITIDAS:
+        raise SQLInvalido(f"metrica fora da allowlist: {intent.metrica!r}")
+    invalidas = [uf for uf in intent.ufs if uf not in geo.UFS]
+    if invalidas:
+        raise SQLInvalido(f"UF fora da allowlist: {invalidas}")
+    if intent.regiao is not None and intent.regiao not in _REGIOES_PERMITIDAS:
+        raise SQLInvalido(f"regiao fora da allowlist: {intent.regiao!r}")
+
+
 def build_sql(intent: Intent) -> str:
     """Constroi SQL para uma intencao reconhecida."""
+    _validar_campos(intent)
     metrica = intent.metrica
     if intent.tipo == "ranking":
         ordem = "DESC" if intent.ordem == "desc" else "ASC"

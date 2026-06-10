@@ -15,6 +15,7 @@ from . import nomes
 _PALAVRAS_DESC = ("maior", "maiores", "mais", "top", "piores", "pior", "ranking")
 _PALAVRAS_ASC = ("menor", "menores", "menos", "melhores", "melhor")
 _PALAVRAS_TOTAL = ("total", "totais", "soma", "somar", "nacional", "brasil", "pais")
+_SIGLAS_AMBIGUAS = frozenset({"SE"})
 
 
 @dataclass(frozen=True)
@@ -42,9 +43,13 @@ def _detectar_ufs(pergunta_original: str, texto_norm: str) -> list[str]:
     """Detecta UFs por sigla literal e por nomes normalizados."""
     achadas: list[str] = []
 
+    alvo_upper = pergunta_original.upper()
     for sigla in geo.UFS:
-        if re.search(rf"\b{sigla}\b", pergunta_original.upper()):
-            achadas.append(sigla)
+        if not re.search(rf"\b{sigla}\b", alvo_upper):
+            continue
+        if sigla in _SIGLAS_AMBIGUAS and not re.search(rf"\b{sigla}\b", pergunta_original):
+            continue
+        achadas.append(sigla)
 
     for nome in sorted(nomes.NOME_PARA_UF, key=len, reverse=True):
         if re.search(rf"\b{re.escape(nome)}\b", texto_norm):

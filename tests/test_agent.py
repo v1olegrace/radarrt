@@ -5,6 +5,7 @@ from __future__ import annotations
 import sqlite3
 
 import pandas as pd
+import pytest
 
 from radarrt.agent import core
 from radarrt.agent import intent as I
@@ -149,3 +150,48 @@ def test_validador_bloqueia_nao_select() -> None:
 def test_validador_aceita_select_valido() -> None:
     ok = S.validar_select("SELECT uf, lsi FROM indicadores WHERE grade = 3")
     assert ok.startswith("SELECT")
+
+
+def test_se_minusculo_nao_vira_sergipe() -> None:
+    assert I.parse("quais estados se destacam").ufs == []
+    assert I.parse("o que se sabe sobre a fila").ufs == []
+
+
+def test_sergipe_ainda_reconhecido() -> None:
+    assert I.parse("deficit em SE").ufs == ["SE"]
+    assert I.parse("fila em Sergipe").ufs == ["SE"]
+
+
+def test_sigla_minuscula_nao_ambigua_funciona() -> None:
+    assert I.parse("lsi de sp").ufs == ["SP"]
+
+
+def test_build_sql_bloqueia_uf_fora_da_allowlist() -> None:
+    malicioso = I.Intent(
+        tipo="valor_uf",
+        metrica="demanda_reprimida",
+        ufs=["SP' OR '1'='1"],
+    )
+    with pytest.raises(SQLInvalido):
+        S.build_sql(malicioso)
+
+
+def test_build_sql_bloqueia_metrica_fora_da_allowlist() -> None:
+    for metrica in ["demanda_reprimida; DROP", "evil", "1=1"]:
+        with pytest.raises(SQLInvalido):
+            S.build_sql(I.Intent(tipo="ranking", metrica=metrica))
+
+
+def test_build_sql_bloqueia_regiao_fora_da_allowlist() -> None:
+    malicioso = I.Intent(
+        tipo="agregado",
+        metrica="demanda_rt_sus",
+        regiao="x' UNION SELECT",
+    )
+    with pytest.raises(SQLInvalido):
+        S.build_sql(malicioso)
+
+
+def test_validador_bloqueia_union() -> None:
+    with pytest.raises(SQLInvalido):
+        S.validar_select("SELECT uf FROM indicadores UNION SELECT 1")
