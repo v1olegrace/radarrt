@@ -15,6 +15,9 @@ from . import nomes
 _PALAVRAS_DESC = ("maior", "maiores", "mais", "top", "piores", "pior", "ranking")
 _PALAVRAS_ASC = ("menor", "menores", "menos", "melhores", "melhor")
 _PALAVRAS_TOTAL = ("total", "totais", "soma", "somar", "nacional", "brasil", "pais")
+
+# Siglas que colidem com palavras comuns do portugues (ex.: "SE" x "se").
+# Elas so contam como UF quando aparecem em caixa alta no texto original.
 _SIGLAS_AMBIGUAS = frozenset({"SE"})
 
 
@@ -47,7 +50,10 @@ def _detectar_ufs(pergunta_original: str, texto_norm: str) -> list[str]:
     for sigla in geo.UFS:
         if not re.search(rf"\b{sigla}\b", alvo_upper):
             continue
-        if sigla in _SIGLAS_AMBIGUAS and not re.search(rf"\b{sigla}\b", pergunta_original):
+        if sigla in _SIGLAS_AMBIGUAS and not re.search(
+            rf"\b{sigla}\b",
+            pergunta_original,
+        ):
             continue
         achadas.append(sigla)
 

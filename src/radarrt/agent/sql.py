@@ -8,6 +8,9 @@ from .. import geo, schemas
 from .intent import Intent
 
 TABELA = "indicadores"
+
+# Defense-in-depth: o parser ja usa vocabulario controlado, mas Intent e uma
+# estrutura publica e tambem pode ser instanciada diretamente em testes/integracoes.
 _COLUNAS_PERMITIDAS = frozenset({*schemas.COLUNAS_ENTRADA, *schemas.COLUNAS_SAIDA})
 _REGIOES_PERMITIDAS = frozenset(geo.UF_PARA_REGIAO.values())
 
