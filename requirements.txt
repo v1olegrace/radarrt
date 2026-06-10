@@ -1,0 +1,21 @@
+# Nucleo (Passo 1 - roda offline)
+pandas>=2.2
+numpy>=1.26,<2; python_version < "3.13"
+numpy>=2.1; python_version >= "3.13"
+
+# Ingestao de dados reais (Passo 2)
+pysus>=2.0,<3; python_version < "3.13"
+duckdb>=1.0          # joins/agregacao local sobre parquet
+pyarrow>=16.0
+
+# Dashboard + mapa (Passo 3)
+streamlit>=1.36
+pydeck>=0.9
+plotly>=5.22
+geopandas>=1.0       # malhas IBGE (UF / regiao de saude)
+
+# Agente conversacional text-to-SQL (Passo 4)
+# Sem LLM: usa o duckdb ja listado acima para consulta local.
+
+# Dev
+pytest>=8.0

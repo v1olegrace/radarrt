@@ -1,0 +1,4 @@
+cenario,rur,sus_share,fracao_efetiva_rt,demanda_rt_sus,oferta_realizada,demanda_reprimida,linacs_instalados,lsi_nacional,deficit_linacs,ufs_grade_0,ufs_grade_1,ufs_grade_2,ufs_grade_3,ufs_grade_4
+conservador,0.483,0.652,0.31491600000000003,163054.05732000005,141715.0,30636.220040000015,363.0,99.81882909090912,36.0,7,12,6,0,2
+base,0.5,0.8,0.4,207108.0,141715.0,66539.0,363.0,126.78787878787878,109.0,1,6,18,0,2
+superior,0.64,0.8,0.512,265098.24,141715.0,123538.36,363.0,162.28848484848484,238.0,0,2,23,0,2
