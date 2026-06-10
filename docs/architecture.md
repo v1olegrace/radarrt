@@ -17,6 +17,8 @@ audited.
 - `radarrt.validation`: offline scientific checks and benchmark reproduction.
 - `radarrt.agent`: deterministic Portuguese parser, SELECT-only SQL builder and
   response renderer.
+- `streamlit_app.py`: demo dashboard over the versioned CSV mart, including
+  national cards, UF ranking, approximate priority map, caveats and agent tab.
 
 ## Design Principles
 
@@ -25,3 +27,12 @@ audited.
 - All source caveats must appear in provenance or validation output.
 - CSV outputs are flat by design so they can feed dashboards, notebooks or SQL
   agents without extra joins.
+
+## Demo Flow
+
+```text
+INCA 2026 ----\
+SIA-AR 2024 ----> base canonica -> motor deterministico -> CSVs -> dashboard
+LINAC park ---/                                      \
+                                                       -> agente SQL offline
+```

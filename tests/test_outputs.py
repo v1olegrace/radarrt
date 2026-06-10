@@ -5,6 +5,7 @@ from pathlib import Path
 import pandas as pd
 
 from radarrt import schemas
+from scripts import probe_outputs
 
 OUTPUT_DIR = Path("data/outputs_2024")
 
@@ -44,6 +45,17 @@ def test_output_indicadores_tem_colunas_do_motor() -> None:
     assert _valor(resumo, "demanda_reprimida") == 66_539
     assert _valor(procedencia, "oferta") == "real"
     assert _valor(procedencia, "linacs") == "estimado (parque publicado)"
+
+
+def test_probe_outputs_real_classifica_alertas_metodologicos() -> None:
+    resultado = probe_outputs.auditar_outputs(OUTPUT_DIR)
+
+    assert resultado.passou
+    assert resultado.anchors["demanda_reprimida"] == 66_539
+    assert resultado.anchors["deficit_linacs"] == 109
+    assert resultado.anchors["lsi_nacional"] == 126.8
+    assert resultado.anchors["grades_base"] == [1, 6, 18, 0, 2]
+    assert any("Oferta anualizada" in alerta.nome for alerta in resultado.alertas)
 
 
 def _valor(df: pd.DataFrame, metrica: str) -> object:

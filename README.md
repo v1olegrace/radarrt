@@ -5,6 +5,10 @@ epidemiologica esperada, oferta realizada e capacidade instalada. O projeto foi
 desenhado para hackathons e auditoria tecnica: motor deterministico, fontes
 rastreaveis, testes offline e agente text-to-SQL sem LLM.
 
+RadarRT nao prioriza pacientes individualmente e nao substitui regulacao,
+auditoria institucional ou estudos oficiais. Ele e uma ferramenta analitica
+para explorar gargalos agregados e explicitar incertezas dos dados.
+
 ## What It Delivers
 
 - Base canonica por UF para radioterapia no Brasil.
@@ -21,8 +25,8 @@ rastreaveis, testes offline e agente text-to-SQL sem LLM.
 - [x] Fallback isolado por fonte com procedencia explicita.
 - [x] Agente text-to-SQL offline.
 - [x] Testes automatizados para motor, ingestao, outputs, validacao e agente.
-- [ ] Dashboard Streamlit completo e mapa.
-- [ ] Pitch final e narrativa visual.
+- [x] Dashboard Streamlit de demo com mapa, ranking, sensibilidade e agente.
+- [x] Narrativa de pitch e limitacoes metodologicas documentadas.
 
 ## Quickstart
 
@@ -38,6 +42,12 @@ Run the synthetic/scientific probe:
 python scripts/probe.py
 ```
 
+Run the operational mart probe:
+
+```bash
+python scripts/probe_outputs.py
+```
+
 Operational exports intentionally fail if a real source is unavailable. Use
 Python 3.11 for the reproducible 2024 export:
 
@@ -49,6 +59,13 @@ After editable install, the packaged CLI is also available:
 
 ```bash
 radarrt-indicadores
+```
+
+Run the demo dashboard:
+
+```bash
+python -m pip install -e ".[dashboard]"
+streamlit run streamlit_app.py
 ```
 
 ## Real Data Ingestion
@@ -68,6 +85,9 @@ The default operational run uses:
 - SIA-AR 2024: real unique CNS count for external radiotherapy procedures
 - Capacity: `data/parque_linacs_2030.csv`
 - Output directory: `data/outputs_2024`
+
+The directory name is historical: the mart combines offer observed in SIA-AR
+2024, INCA 2026 incidence and an estimated LINAC park allocation.
 
 ## Data Contract
 
@@ -129,6 +149,9 @@ app/                    Streamlit integration components
 scripts/                operational probes and validation runners
 ```
 
+See `docs/pitch_notes.md` for the recommended demo narrative and validation
+wording.
+
 ## Methodology
 
 | Step | Calculation | Source |
@@ -156,6 +179,7 @@ residence-based attribution is the main next data upgrade.
 ```bash
 python -m pytest
 python -m ruff check .
+python scripts/probe_outputs.py
 .\.venv311\Scripts\python.exe run_indicadores.py
 ```
 

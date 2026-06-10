@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added a Streamlit demo dashboard over the versioned mart.
+- Added `scripts/probe_outputs.py` to validate operational CSV outputs separately
+  from the synthetic scientific probe.
+- Added pitch notes with explicit validation wording and methodological caveats.
 - Fixed single-UF questions that also say "total" so the UF filter is preserved.
 - Hardened the SQL validator against comma joins and DuckDB file-loading helpers.
 - Documented the SIA-AR treatment-location attribution caveat.

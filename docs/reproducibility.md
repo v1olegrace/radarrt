@@ -38,3 +38,14 @@ python scripts/probe.py
 
 Use `--ano`, `--csv-inca`, `--fonte-capacidade` and `--csv-parque` to probe a
 real source configuration.
+
+## Operational Mart Probe
+
+```bash
+python scripts/probe_outputs.py
+```
+
+This command validates the versioned mart in `data/outputs_2024`. It treats
+schema, anchors and provenance as blocking checks, while known data-tension
+issues are reported as methodological alerts. Use `--strict` only when you want
+those alerts to produce a non-zero exit code.

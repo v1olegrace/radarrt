@@ -44,6 +44,7 @@ ingest = [
     "pyarrow>=16.0",
 ]
 dashboard = [
+    "duckdb>=1.0",
     "streamlit>=1.36",
     "pydeck>=0.9",
     "plotly>=5.22",
