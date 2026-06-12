@@ -1,8 +1,8 @@
 """Dashboard Streamlit do RadarRT - identidade visual Cherenkov.
 
-Radar de demanda reprimida de radioterapia no SUS. Espaco profundo, glow
-Cherenkov (#3DDCFF), Poppins no display e leitura monoespacada nos numeros,
-como um instrumento que ilumina a fila invisivel.
+Radar de demanda reprimida de radioterapia no SUS. Espaço profundo, glow
+Cherenkov (#3DDCFF), Poppins no display e leitura monoespacada nos números,
+como um instrumento que ilumina a fila invisível.
 """
 
 from __future__ import annotations
@@ -42,15 +42,15 @@ UF_COORDS = {
     "RR": (1.99, -61.33), "RS": (-30.17, -53.50), "SC": (-27.45, -50.95),
     "SE": (-10.57, -37.45), "SP": (-22.19, -48.79), "TO": (-10.17, -48.30),
 }
-# Rampa de grade (0 controlado -> 4 sem servico). Coral e o hook emocional.
+# Rampa de grade (0 controlado -> 4 sem serviço). Coral é o hook emocional.
 GRADE_HEX = {0: "#2DD4A7", 1: "#A3E635", 2: "#FB923C", 3: "#F87171", 4: "#FF5470"}
 GRADE_RGB = {
     0: [45, 212, 167, 205], 1: [163, 230, 53, 215], 2: [251, 146, 60, 225],
     3: [248, 113, 113, 235], 4: [255, 84, 112, 245],
 }
 GRADE_LABEL = {
-    0: "Controlado", 1: "Atencao", 2: "Critico", 3: "Severo",
-    4: "Sem servico",
+    0: "Controlado", 1: "Atenção", 2: "Crítico", 3: "Severo",
+    4: "Sem serviço",
 }
 
 CSS = """
@@ -319,11 +319,11 @@ def render_hero(procedencia: pd.DataFrame) -> None:
         f"""
         <div class="rt-eyebrow rt-anim" style="animation-delay:.02s">RadarRT &middot; Radar de demanda reprimida</div>
         <div class="rt-title rt-anim" style="animation-delay:.10s">A maior barreira da radioterapia<br/>
-          no Brasil e <em>invisivel</em>.</div>
-        <div class="rt-sub rt-anim" style="animation-delay:.20s">Cruzamos incidencia, producao ambulatorial e o parque
-          de aceleradores para tornar a fila do SUS um numero auditavel por estado.</div>
+          no Brasil e <em>invisível</em>.</div>
+        <div class="rt-sub rt-anim" style="animation-delay:.20s">Cruzamos incidência, produção ambulatorial e o parque
+          de aceleradores para tornar a fila do SUS um número auditável por estado.</div>
         <div class="rt-prov rt-anim" style="animation-delay:.30s">
-          {chip("incidencia", proc.get("incidencia", "-"))}
+          {chip("incidência", proc.get("incidencia", "-"))}
           {chip("oferta", proc.get("oferta", "-"))}
           {chip("parque", "real (RT2030)")}
         </div>
@@ -337,10 +337,10 @@ def render_cards(resumo: pd.DataFrame) -> None:
     cards = [
         ("Demanda reprimida", _int_br(_valor(resumo, "demanda_reprimida")),
          "pacientes/ano na fila", "var(--cherenkov)", "rgba(61,220,255,.35)"),
-        ("Deficit para fila zero", _int_br(_valor(resumo, "deficit_linacs")),
+        ("Déficit para fila zero", _int_br(_valor(resumo, "deficit_linacs")),
          "LINACs para demanda total", "var(--coral)", "rgba(255,84,112,.30)"),
         ("LSI nacional", _float_br(_valor(resumo, "lsi_nacional")),
-         "indice de escassez (100 = equilibrio)", "var(--violet)", "rgba(124,92,255,.30)"),
+         "índice de escassez (100 = equilíbrio)", "var(--violet)", "rgba(124,92,255,.30)"),
         ("LINACs instalados", _int_br(_valor(resumo, "linacs_instalados")),
          "censo RT2030, todos os setores", "var(--cherenkov-soft)", "rgba(124,231,255,.28)"),
     ]
@@ -367,7 +367,7 @@ def render_hook(indicadores: pd.DataFrame) -> None:
     st.markdown(
         f"""
         <div class="rt-hook rt-anim" style="animation-delay:.70s"><span class="rt-hook__dot"></span>
-        <div><b>{len(sem)} estados sem um unico acelerador instalado</b> &mdash;
+        <div><b>{len(sem)} estados sem um único acelerador instalado</b> &mdash;
         {nomes}. Segundo o censo RT2030, esses pacientes precisam atravessar
         fronteiras estaduais para tratar.</div></div>
         """,
@@ -403,7 +403,7 @@ def _sigla_da_feature(props: dict) -> str | None:
 
 
 def enriquecer_geojson(geojson: dict, indicadores: pd.DataFrame) -> dict:
-    """Anexa grade, cor e metricas a cada estado do geojson (join por sigla/nome)."""
+    """Anexa grade, cor e métricas a cada estado do geojson (join por sigla/nome)."""
     idx = indicadores.set_index("uf")
     feats = []
     for feature in geojson.get("features", []):
@@ -436,7 +436,7 @@ def _carregar_geojson() -> dict | None:
 
 
 def render_coropletico(indicadores: pd.DataFrame, geojson: dict) -> bool:
-    """Renderiza estados preenchidos por grade. Retorna False se nao deu."""
+    """Renderiza estados preenchidos por grade. Retorna False se não deu."""
     enriquecido = enriquecer_geojson(geojson, indicadores)
     if not enriquecido["features"]:
         return False
@@ -451,7 +451,7 @@ def render_coropletico(indicadores: pd.DataFrame, geojson: dict) -> bool:
         layers=[camada],
         tooltip={
             "html": "<b>{sigla}</b> &middot; {grade_label}<br/>"
-                    "Fila: {fila}<br/>Deficit: {deficit} &middot; LSI: {lsi}",
+                    "Fila: {fila}<br/>Déficit: {deficit} &middot; LSI: {lsi}",
             "style": {"backgroundColor": "#111A2E", "color": "#EAF2FF",
                       "fontFamily": "Poppins", "fontSize": "12px",
                       "border": "1px solid rgba(132,160,210,.28)",
@@ -469,14 +469,14 @@ def preparar_mapa(indicadores: pd.DataFrame) -> pd.DataFrame:
     mapa["lon"] = mapa["uf"].map(lambda uf: UF_COORDS[uf][1])
     mapa["color"] = mapa["grade"].map(lambda g: GRADE_RGB[int(g)])
     base = (mapa["demanda_reprimida"].clip(lower=600) ** 0.5) * 1700
-    # grade 4 (sem servico) recebe presenca minima alta: o hook nao pode sumir.
+    # Grade 4 (sem serviço) recebe presença mínima alta: o hook não pode sumir.
     piso = mapa["grade"].map(lambda g: 95000 if int(g) == 4 else 0)
     mapa["radius"] = base.clip(lower=0) + piso
     return mapa
 
 
 def render_mapa(indicadores: pd.DataFrame) -> None:
-    """Mapa por prioridade: estados preenchidos se houver geojson, senao bolhas."""
+    """Mapa por prioridade: estados preenchidos se houver geojson, senão bolhas."""
     geojson = _carregar_geojson()
     if geojson is not None and render_coropletico(indicadores, geojson):
         _legenda_grades()
@@ -494,7 +494,7 @@ def render_mapa(indicadores: pd.DataFrame) -> None:
         layers=[camada],
         tooltip={
             "html": "<b>{uf}</b> &middot; grade {grade}<br/>"
-                    "Fila: {demanda_reprimida}<br/>Deficit: {deficit_linacs}",
+                    "Fila: {demanda_reprimida}<br/>Déficit: {deficit_linacs}",
             "style": {"backgroundColor": "#111A2E", "color": "#EAF2FF",
                       "fontFamily": "Poppins", "fontSize": "12px",
                       "border": "1px solid rgba(132,160,210,.28)",
@@ -525,7 +525,7 @@ def render_ranking(ranking: pd.DataFrame) -> None:
         lsi = "inf" if r["lsi"] == float("inf") else _float_br(float(r["lsi"]), 0)
         linhas += (
             f'<div class="rt-row"><span class="rt-row__uf">{r["uf"]}</span>'
-            f'<span class="rt-row__meta">{r["regiao"]} &middot; deficit '
+            f'<span class="rt-row__meta">{r["regiao"]} &middot; déficit '
             f'{int(r["deficit_linacs"])} &middot; LSI {lsi}</span>'
             f'<span class="rt-row__fila">{_int_br(r["demanda_reprimida"])}'
             f' <span class="rt-grade" style="background:{hexc}22;color:{hexc};'
@@ -558,7 +558,7 @@ def render_dimensionar_nacional(indicadores: pd.DataFrame, params) -> None:
     col_meta, col_custo = st.columns([1, 1])
     with col_meta:
         meta_label = st.select_slider(
-            "Meta de utilizacao",
+            "Meta de utilização",
             options=["rho <= 1,0", "rho <= 0,8"],
             value="rho <= 1,0",
         )
@@ -583,14 +583,14 @@ def render_dimensionar_nacional(indicadores: pd.DataFrame, params) -> None:
         f"""
         <div class="rt-hook"><span class="rt-hook__dot"></span>
         <div><b>{_moeda_curta(investimento)} e {profissionais} profissionais</b>
-        tornam a Lei dos 60 dias estruturalmente viavel em todo o pais.</div></div>
+        tornam a Lei dos 60 dias estruturalmente viável em todo o país.</div></div>
         """,
         unsafe_allow_html=True,
     )
     detalhe_prof = (
-        f"{int(plano['deficit_fisico_medico'])} fisicos · "
+        f"{int(plano['deficit_fisico_medico'])} físicos · "
         f"{int(plano['deficit_radio_oncologista'])} oncos · "
-        f"{int(plano['deficit_tecnico_rtt'])} tecnicos"
+        f"{int(plano['deficit_tecnico_rtt'])} técnicos"
     )
     _cards_html(
         [
@@ -638,18 +638,18 @@ def render_dimensionar_uf(indicadores: pd.DataFrame, params) -> None:
         st.markdown(
             """
             <div class="rt-hook"><span class="rt-hook__dot"></span>
-            <div><b>60 dias viavel</b> como condicao estrutural: rho abaixo de 1.</div></div>
+            <div><b>60 dias viável</b> como condição estrutural: ρ abaixo de 1.</div></div>
             """,
             unsafe_allow_html=True,
         )
 
     _cards_html(
         [
-            ("Utilizacao rho", f"{_pct(float(antes['utilizacao']))} -> {_pct(float(depois['utilizacao']))}",
+            ("Utilização (ρ)", f"{_pct(float(antes['utilizacao']))} -> {_pct(float(depois['utilizacao']))}",
              "demanda/capacidade", "var(--cherenkov)", "rgba(61,220,255,.35)"),
             ("Grade", f"{int(antes['grade'])} -> {int(depois['grade'])}",
              "prioridade territorial", "var(--violet)", "rgba(124,92,255,.30)"),
-            ("Deficit LINACs", f"{int(antes['deficit_linacs'])} -> {int(depois['deficit_linacs'])}",
+            ("Déficit LINACs", f"{int(antes['deficit_linacs'])} -> {int(depois['deficit_linacs'])}",
              f"{atual_linacs} -> {atual_linacs + adicionar} instalados",
              "var(--coral)", "rgba(255,84,112,.30)"),
             ("Tempo de espera", _tempo(float(depois["tempo_espera_meses"])),
@@ -657,28 +657,33 @@ def render_dimensionar_uf(indicadores: pd.DataFrame, params) -> None:
              "var(--cherenkov-soft)", "rgba(124,231,255,.28)"),
         ]
     )
+    st.caption(
+        "Tempo de espera = meses para drenar a fila atual com a folga de "
+        "capacidade existente (demanda estável). Não é a espera de um paciente "
+        "individual; \"fila crescente\" indica ρ ≥ 1 (a fila não se esgota)."
+    )
     _cards_html(
         [
             ("Profissionais", _int_br(total_prof),
              "para operar os LINACs adicionados", "var(--coral)", "rgba(255,84,112,.30)"),
-            ("Fisicos medicos", _int_br(prof_adicionados["fisico_medico"]),
-             "formacao especializada", "var(--cherenkov)", "rgba(61,220,255,.35)"),
+            ("Físicos médicos", _int_br(prof_adicionados["fisico_medico"]),
+             "formação especializada", "var(--cherenkov)", "rgba(61,220,255,.35)"),
             ("Radio-oncologistas", _int_br(prof_adicionados["radio_oncologista"]),
-             "formacao especializada", "var(--violet)", "rgba(124,92,255,.30)"),
-            ("Tecnicos RTT", _int_br(prof_adicionados["tecnico_rtt"]),
-             "formacao especializada", "var(--cherenkov-soft)", "rgba(124,231,255,.28)"),
+             "formação especializada", "var(--violet)", "rgba(124,92,255,.30)"),
+            ("Técnicos RTT", _int_br(prof_adicionados["tecnico_rtt"]),
+             "formação especializada", "var(--cherenkov-soft)", "rgba(124,231,255,.28)"),
         ]
     )
 
 
 def render_auditoria_expansao(cenarios_parque: pd.DataFrame) -> None:
-    """Bloco de auditoria da expansao PERSUS/Agora Tem Especialistas."""
-    st.markdown('<div class="rt-sec">Auditoria da expansao</div>',
+    """Bloco de auditoria da expansão PERSUS/Agora Tem Especialistas."""
+    st.markdown('<div class="rt-sec">Auditoria da expansão</div>',
                 unsafe_allow_html=True)
     col_demanda, col_expansao = st.columns([1, 1])
     with col_demanda:
         cenario = st.radio(
-            "Cenario de demanda",
+            "Cenário de demanda",
             ["base", "superior"],
             horizontal=True,
             key="auditoria_cenario",
@@ -690,7 +695,7 @@ def render_auditoria_expansao(cenarios_parque: pd.DataFrame) -> None:
     }
     with col_expansao:
         expansao_rotulo = st.select_slider(
-            "Expansao hipotetica",
+            "Expansão hipotética",
             options=list(rotulos_expansao),
             value="+121 PERSUS 2026",
         )
@@ -703,49 +708,49 @@ def render_auditoria_expansao(cenarios_parque: pd.DataFrame) -> None:
     divergentes = int(linha["ufs_fila_divergente"])
     if cenario == "base" and expansao == 121 and deficit == 0:
         tese = (
-            "A expansao atual fecha o deficit estrutural no cenario base "
+            "A expansão atual fecha o déficit estrutural no cenário base "
             "se for bem alocada."
         )
     elif cenario == "superior" and expansao == 121:
         tese = (
             "Mesmo com os 121 do PERSUS, 86 LINACs continuam faltando no "
-            "cenario de maior demanda."
+            "cenário de maior demanda."
         )
     else:
         tese = (
-            "A suficiencia depende simultaneamente da demanda assumida e da "
-            "alocacao das maquinas."
+            "A suficiência depende simultaneamente da demanda assumida e da "
+            "alocação das máquinas."
         )
     st.markdown(
         f"""
         <div class="rt-hook"><span class="rt-hook__dot"></span>
-        <div><b>{tese}</b> Alocacao proporcional ao deficit e melhor caso;
+        <div><b>{tese}</b> Alocação proporcional ao déficit e melhor caso;
         o plano real deve ser auditado por UF.</div></div>
         """,
         unsafe_allow_html=True,
     )
     _cards_html(
         [
-            ("Deficit residual", _int_br(deficit),
-             "LINACs apos expansao", "var(--coral)", "rgba(255,84,112,.30)"),
-            ("UFs rho >= 1", _int_br(divergentes),
-             "60 dias estruturalmente inviavel", "var(--violet)", "rgba(124,92,255,.30)"),
+            ("Déficit residual", _int_br(deficit),
+             "LINACs após expansão", "var(--coral)", "rgba(255,84,112,.30)"),
+            ("UFs ρ ≥ 1", _int_br(divergentes),
+             "60 dias estruturalmente inviável", "var(--violet)", "rgba(124,92,255,.30)"),
             ("Parque total", _int_br(linha["parque_total"]),
-             "censo + maquinas alocadas", "var(--cherenkov)", "rgba(61,220,255,.35)"),
-            ("Maquinas alocadas", _int_br(linha["maquinas_alocadas"]),
+             "censo + máquinas alocadas", "var(--cherenkov)", "rgba(61,220,255,.35)"),
+            ("Máquinas alocadas", _int_br(linha["maquinas_alocadas"]),
              expansao_rotulo, "var(--cherenkov-soft)", "rgba(124,231,255,.28)"),
         ]
     )
 
 
 def render_validacao_painel(mart: dict[str, pd.DataFrame]) -> None:
-    """Validacao externa contra o PAINEL-Oncologia, quando ha cache."""
+    """Validação externa contra o PAINEL-Oncologia, quando há cache."""
     painel = mart.get("painel_validacao")
     regional = mart.get("painel_validacao_regional")
     if painel is None or regional is None:
         return
 
-    st.markdown('<div class="rt-sec">Validacao externa (PAINEL)</div>',
+    st.markdown('<div class="rt-sec">Validação externa (PAINEL)</div>',
                 unsafe_allow_html=True)
     spearman = _spearman_dashboard(
         regional["rho_medio"],
@@ -759,18 +764,18 @@ def render_validacao_painel(mart: dict[str, pd.DataFrame]) -> None:
     )
     if pd.notna(spearman) and spearman < 0:
         tese = (
-            "As regioes mais saturadas no RadarRT tambem aparecem com menor "
+            "As regiões mais saturadas no RadarRT também aparecem com menor "
             "cumprimento da Lei dos 60 dias no PAINEL-Oncologia."
         )
     else:
         tese = (
-            "Nesta extracao, a correlacao regional nao veio negativa; o dado "
-            "oficial e reportado sem ajuste de recorte."
+            "Nesta extração, a correlação regional não veio negativa; o dado "
+            "oficial é reportado sem ajuste de recorte."
         )
     st.markdown(
         f"""
         <div class="rt-hook"><span class="rt-hook__dot"></span>
-        <div><b>{tese}</b> Maior rho: {saturadas}. Menor pct <=60d: {piores}.</div></div>
+        <div><b>{tese}</b> Maior ρ: {saturadas}. Menor pct <=60d: {piores}.</div></div>
         """,
         unsafe_allow_html=True,
     )
@@ -781,12 +786,12 @@ def render_validacao_painel(mart: dict[str, pd.DataFrame]) -> None:
     _cards_html(
         [
             ("Spearman regional", _float_br(float(spearman), 2),
-             "rho x pct <=60d", "var(--cherenkov)", "rgba(61,220,255,.35)"),
-            ("Pior regiao PAINEL", str(pior_regiao["regiao"]),
+             "ρ x pct <=60d", "var(--cherenkov)", "rgba(61,220,255,.35)"),
+            ("Pior região PAINEL", str(pior_regiao["regiao"]),
              _pct_label(float(pior_regiao["pct_ate_60d_medio"])),
              "var(--coral)", "rgba(255,84,112,.30)"),
-            ("UFs rho >= 1", _int_br(ufs_saturadas),
-             "saturacao estrutural", "var(--violet)", "rgba(124,92,255,.30)"),
+            ("UFs ρ ≥ 1", _int_br(ufs_saturadas),
+             "saturação estrutural", "var(--violet)", "rgba(124,92,255,.30)"),
             ("Mediana <=60d", _pct_label(mediana_pct),
              "UF do tratamento", "var(--cherenkov-soft)", "rgba(124,231,255,.28)"),
         ]
@@ -809,9 +814,9 @@ def render_validacao_painel(mart: dict[str, pd.DataFrame]) -> None:
     st.dataframe(regional, hide_index=True, use_container_width=True)
     st.caption(
         "PAINEL-Oncologia 2019-2024. Linha: UF do tratamento; coluna: tempo "
-        "tratamento; modalidade: radioterapia. 'Sem informacao' fica fora do "
-        "denominador. O detalhe por UF e exploratorio por fluxo interestadual "
-        "e subnotificacao."
+        "tratamento; modalidade: radioterapia. 'Sem informação' fica fora do "
+        "denominador. O detalhe por UF é exploratório por fluxo interestadual "
+        "e subnotificação."
     )
 
 
@@ -831,7 +836,7 @@ def render_robustez_throughput(
     sensibilidade: pd.DataFrame,
     resumo: pd.DataFrame,
 ) -> None:
-    """Bloco de robustez para o parametro throughput de LINAC."""
+    """Bloco de robustez para o parâmetro throughput de LINAC."""
     st.markdown('<div class="rt-sec">Robustez ao throughput</div>',
                 unsafe_allow_html=True)
     tabela = sensibilidade.sort_values("throughput").copy()
@@ -841,31 +846,31 @@ def render_robustez_throughput(
     st.markdown(
         f"""
         <div class="rt-hook"><span class="rt-hook__dot"></span>
-        <div><b>Mesmo no cenario mais otimista (550), {otimista_ufs}
-        estados seguem saturados.</b> A conclusao nao depende da premissa de
-        throughput; 450 e o valor adotado e conservador.</div></div>
+        <div><b>Mesmo no cenário mais otimista (550), {otimista_ufs}
+        estados seguem saturados.</b> A conclusão não depende da premissa de
+        throughput; 450 é o valor adotado e conservador.</div></div>
         """,
         unsafe_allow_html=True,
     )
     _cards_html(
         [
             ("Throughput adotado", _int_br(adotado["throughput"]),
-             "cursos/maquina/ano", "var(--cherenkov)", "rgba(61,220,255,.35)"),
-            ("Deficit em 450", _int_br(adotado["deficit_linacs"]),
+             "cursos/máquina/ano", "var(--cherenkov)", "rgba(61,220,255,.35)"),
+            ("Déficit em 450", _int_br(adotado["deficit_linacs"]),
              "LINACs para fila zero", "var(--coral)", "rgba(255,84,112,.30)"),
             ("Teto otimista", _int_br(otimista["deficit_linacs"]),
              "LINACs ainda faltantes", "var(--violet)", "rgba(124,92,255,.30)"),
-            ("Fila invariavel", _int_br(_valor(resumo, "demanda_reprimida")),
+            ("Fila invariável", _int_br(_valor(resumo, "demanda_reprimida")),
              "pacientes/ano", "var(--cherenkov-soft)", "rgba(124,231,255,.28)"),
         ]
     )
     chart = tabela.rename(
         columns={
             "throughput": "Throughput",
-            "deficit_linacs": "Deficit LINACs",
-            "ufs_fila_divergente": "UFs rho >= 1",
+            "deficit_linacs": "Déficit LINACs",
+            "ufs_fila_divergente": "UFs ρ ≥ 1",
         }
-    ).set_index("Throughput")[["Deficit LINACs", "UFs rho >= 1"]]
+    ).set_index("Throughput")[["Déficit LINACs", "UFs ρ ≥ 1"]]
     st.line_chart(chart, use_container_width=True)
     styled = tabela.style.apply(
         lambda linha: [
@@ -876,38 +881,38 @@ def render_robustez_throughput(
     )
     st.dataframe(styled, hide_index=True, use_container_width=True)
     st.caption(
-        "A fila reprimida (66.539) e invariante ao throughput; apenas a "
-        "traducao para maquinas, pessoas e tempo varia."
+        "A fila reprimida (66.539) é invariante ao throughput; apenas a "
+        "tradução para máquinas, pessoas e tempo varia."
     )
 
 
 def render_caveats(mart: dict[str, pd.DataFrame]) -> None:
-    """Limitacoes honestas - a diferenca entre dashboard bonito e ferramenta."""
+    """Limitações honestas - a diferença entre dashboard bonito e ferramenta."""
     proc = mart["procedencia"].set_index("metrica")["valor"].to_dict()
-    st.markdown('<div class="rt-sec">Limitacoes honestas</div>',
+    st.markdown('<div class="rt-sec">Limitações honestas</div>',
                 unsafe_allow_html=True)
     st.markdown(
         """
-- O RadarRT **nao prioriza pacientes** individualmente e nao substitui
-  regulacao, auditoria institucional ou estudos oficiais.
-- A oferta SIA-AR 2024 esta atribuida por **UF do estabelecimento**
-  (`AP_UFMUN`), nao por residencia do paciente.
+- O RadarRT **não prioriza pacientes** individualmente e não substitui
+  regulação, auditoria institucional ou estudos oficiais.
+- A oferta SIA-AR 2024 está atribuída por **UF do estabelecimento**
+  (`AP_UFMUN`), não por residência do paciente.
 - O parque de LINACs por UF vem do **censo RT2030** (Rosa et al.,
-  Lancet Oncol 2023, Tabela 1 - instalado, todos os setores). E `real`
-  em `procedencia.csv`, usado como proxy de capacidade acessivel ao SUS.
-- O deficit de LINACs dimensiona o parque para cobrir a demanda RT SUS total
-  do cenario e zerar a fila estrutural; nao e apenas o fluxo incremental depois
+  Lancet Oncol 2023, Tabela 1 - instalado, todos os setores). É `real`
+  em `procedencia.csv`, usado como proxy de capacidade acessível ao SUS.
+- O déficit de LINACs dimensiona o parque para cobrir a demanda RT SUS total
+  do cenário e zerar a fila estrutural; não é apenas o fluxo incremental depois
   da oferta SIA-AR observada.
-- A camada de formacao dimensiona profissionais para operar os LINACs faltantes:
-  nao mede o quadro profissional vigente no CNES.
-- As grades usam carga anual relativa: LSI 100 e equilibrio, 130 e 1,3 ano de
-  carga, 300 e tres anos de carga; grade 4 e zero LINAC instalado.
-- Rankings por UF sao **exploratorios**: quando oferta observada e
-  capacidade instalada divergem, isso vira alerta metodologico, nao
-  numero escondido.
+- A camada de formação dimensiona profissionais para operar os LINACs faltantes:
+  não mede o quadro profissional vigente no CNES.
+- As grades usam carga anual relativa: LSI 100 é equilíbrio, 130 é 1,3 ano de
+  carga, 300 é três anos de carga; grade 4 é zero LINAC instalado.
+- Rankings por UF são **exploratórios**: quando oferta observada e
+  capacidade instalada divergem, isso vira alerta metodológico, não
+  número escondido.
         """
     )
-    st.markdown('<div class="rt-sec">Procedencia</div>', unsafe_allow_html=True)
+    st.markdown('<div class="rt-sec">Procedência</div>', unsafe_allow_html=True)
     st.json(proc)
 
 
@@ -929,13 +934,13 @@ def main() -> None:
         "painel_validacao" in mart
         and "painel_validacao_regional" in mart
     )
-    nomes_abas = ["Visao geral", "Sensibilidade", "Dimensionar"]
+    nomes_abas = ["Visão geral", "Dimensionar"]
     if tem_painel:
-        nomes_abas.append("Validacao")
-    nomes_abas.extend(["Pergunte aos dados", "Limitacoes"])
+        nomes_abas.append("Validação")
+    nomes_abas.extend(["Robustez", "Pergunte aos dados", "Limitações"])
     abas = dict(zip(nomes_abas, st.tabs(nomes_abas), strict=True))
 
-    with abas["Visao geral"]:
+    with abas["Visão geral"]:
         esquerda, direita = st.columns([1.35, 1], gap="large")
         with esquerda:
             st.markdown('<div class="rt-sec">Prioridade territorial</div>',
@@ -946,11 +951,18 @@ def main() -> None:
                         unsafe_allow_html=True)
             render_ranking(mart["ranking"])
 
-    with abas["Sensibilidade"]:
-        st.markdown('<div class="rt-sec">Cenarios de sensibilidade</div>',
+    with abas["Dimensionar"]:
+        render_dimensionar(mart)
+
+    if tem_painel:
+        with abas["Validação"]:
+            render_validacao_painel(mart)
+
+    with abas["Robustez"]:
+        st.markdown('<div class="rt-sec">Cenários de demanda</div>',
                     unsafe_allow_html=True)
-        st.caption("A fila varia com os parametros de demanda; o parque (409) "
-                   "e fixo, pois e dado, nao premissa.")
+        st.caption("A fila varia com os parâmetros de demanda; o parque (409) "
+                   "é fixo, pois é dado, não premissa.")
         st.dataframe(mart["sensibilidade"], hide_index=True,
                      use_container_width=True)
         render_robustez_throughput(
@@ -958,23 +970,16 @@ def main() -> None:
             mart["resumo"],
         )
 
-    with abas["Dimensionar"]:
-        render_dimensionar(mart)
-
-    if tem_painel:
-        with abas["Validacao"]:
-            render_validacao_painel(mart)
-
     with abas["Pergunte aos dados"]:
         render_agente(mart["indicadores"])
 
-    with abas["Limitacoes"]:
+    with abas["Limitações"]:
         render_caveats(mart)
 
     st.markdown(
         '<div class="rt-foot">RadarRT &middot; equipe Cherenkov &mdash; '
         'INCA 2026 &middot; SIA-AR 2024 &middot; parque LINAC real (censo RT2030). '
-        'Demanda reprimida e inferencia auditavel, nao contagem individual.</div>',
+        'Demanda reprimida é inferência auditável, não contagem individual.</div>',
         unsafe_allow_html=True,
     )
 

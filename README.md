@@ -1,42 +1,42 @@
 # RadarRT
 
 RadarRT estima demanda reprimida de radioterapia no SUS cruzando demanda
-epidemiologica esperada, oferta realizada e capacidade instalada. O projeto foi
-desenhado para hackathons e auditoria tecnica: motor deterministico, fontes
-rastreaveis, testes offline e agente text-to-SQL sem LLM.
+epidemiológica esperada, oferta realizada e capacidade instalada. O projeto foi
+desenhado para hackathons e auditoria técnica: motor determinístico, fontes
+rastreáveis, testes offline e agente text-to-SQL sem LLM.
 
-RadarRT nao prioriza pacientes individualmente e nao substitui regulacao,
-auditoria institucional ou estudos oficiais. Ele e uma ferramenta analitica
+RadarRT não prioriza pacientes individualmente e não substitui regulação,
+auditoria institucional ou estudos oficiais. Ele é uma ferramenta analítica
 para explorar gargalos agregados e explicitar incertezas dos dados.
 
-## What It Delivers
+## Entregas
 
-- Base canonica por UF para radioterapia no Brasil.
-- Indicadores de demanda, oferta, LSI, grade de prioridade e deficit de LINACs.
-- Analise de sensibilidade para cenarios conservador, base e superior.
-- Analise de robustez por throughput de LINAC, de 350 a 550 cursos/maquina/ano.
+- Base canônica por UF para radioterapia no Brasil.
+- Indicadores de demanda, oferta, LSI, grade de prioridade e déficit de LINACs.
+- Análise de sensibilidade para cenários conservador, base e superior.
+- Análise de robustez por throughput de LINAC, de 350 a 550 cursos/máquina/ano.
 - CSVs planos prontos para dashboard, notebook ou agente SQL.
-- Agente conversacional PT-BR deterministico que gera apenas `SELECT` validado.
-- Laudo offline de validacao cientifica e operacional.
+- Agente conversacional PT-BR determinístico que gera apenas `SELECT` validado.
+- Laudo offline de validação científica e operacional.
 
-## Project Status
+## Status
 
-- [x] Motor deterministico validado contra LSI nacional 2020 arredondado para 221.
-- [x] Ingestao INCA, SIA-AR, CNES-EQ novo e parque RT2030 publicado.
-- [x] Fallback isolado por fonte com procedencia explicita.
+- [x] Motor determinístico validado contra LSI nacional 2020 arredondado para 221.
+- [x] Ingestão INCA, SIA-AR, CNES-EQ novo e parque RT2030 publicado.
+- [x] Fallback isolado por fonte com procedência explícita.
 - [x] Agente text-to-SQL offline.
-- [x] Testes automatizados para motor, ingestao, outputs, validacao e agente.
-- [x] Dashboard Streamlit de demo com mapa, ranking, sensibilidade e agente.
-- [x] Narrativa de pitch e limitacoes metodologicas documentadas.
+- [x] Testes automatizados para motor, ingestão, outputs, validação e agente.
+- [x] Dashboard Streamlit de demo com mapa, ranking, robustez, validação e agente.
+- [x] Narrativa de pitch e limitações metodológicas documentadas.
 - [x] Anchors do mart RT2030 real re-travados nos testes e no probe operacional.
 
-## Complete Documentation
+## Documentação
 
 - `docs/visao_geral.md`: mapa completo do RadarRT, fluxo ponta a ponta,
-  formulas, modulos, outputs, validacao, caveats e submissao limpa.
-- `docs/architecture.md`: camadas tecnicas e principios de desenho.
+  fórmulas, módulos, outputs, validação, caveats e submissão limpa.
+- `docs/architecture.md`: camadas técnicas e princípios de desenho.
 - `docs/data_sources.md`: fontes, caveats e dados versionados.
-- `docs/reproducibility.md`: comandos para testes, probes e regeneracao do mart.
+- `docs/reproducibility.md`: comandos para testes, probes e regeneração do mart.
 - `docs/text_to_sql_schema.md`: schema consumido pelo agente offline.
 - `docs/pitch_notes.md`: narrativa recomendada e frases metodologicamente
   seguras para demo.

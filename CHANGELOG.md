@@ -9,7 +9,7 @@
 
 - Add external validation against PAINEL-Oncologia (60-day law): TabNet cache
   adapter with sidecars, `painel_validacao*.csv`, offline tests, probe reporting
-  and a conditional Streamlit `Validacao` tab.
+  and a conditional Streamlit `Validação` tab.
 
 - Add park-expansion scenarios to audit PERSUS sufficiency and allocation:
   `cenarios_parque.csv`, pure allocation functions, probe anchors for base and
