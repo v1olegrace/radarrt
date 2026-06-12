@@ -123,10 +123,12 @@ CSS = """
   font-size:.66rem; letter-spacing:.18em; text-transform:uppercase;
   color:var(--muted); font-weight:600;
 }
+.rt-rho{text-transform:none;}
 .rt-card__value{
   font-family:'JetBrains Mono',monospace; font-weight:700;
-  font-size:2.35rem; line-height:1; margin:.55rem 0 .2rem;
+  font-size:2.1rem; line-height:1; margin:.55rem 0 .2rem;
   color:var(--ink); text-shadow:0 0 22px var(--glow);
+  white-space:nowrap; letter-spacing:0;
 }
 .rt-card__unit{font-size:.74rem; color:var(--muted); font-weight:300;}
 
@@ -218,6 +220,9 @@ CSS = """
   .rt-cards{grid-template-columns:repeat(2,1fr);}
   .rt-title{font-size:2rem;}
 }
+@media (max-width:520px){
+  .rt-cards{grid-template-columns:1fr;}
+}
 @media (prefers-reduced-motion: reduce){
   .rt-anim{animation:none; opacity:1;}
   .stApp::before{animation:none;}
@@ -295,9 +300,10 @@ def _tempo(valor: float) -> str:
 def _cards_html(cards: list[tuple[str, str, str, str, str]]) -> None:
     html = '<div class="rt-cards">'
     for titulo, valor, unidade, accent, glow in cards:
+        titulo_html = titulo.replace("ρ", '<span class="rt-rho">ρ</span>')
         html += (
             f'<div class="rt-card" style="--accent:{accent}; --glow:{glow}">'
-            f'<div class="rt-card__eyebrow">{titulo}</div>'
+            f'<div class="rt-card__eyebrow">{titulo_html}</div>'
             f'<div class="rt-card__value">{valor}</div>'
             f'<div class="rt-card__unit">{unidade}</div></div>'
         )
@@ -559,8 +565,8 @@ def render_dimensionar_nacional(indicadores: pd.DataFrame, params) -> None:
     with col_meta:
         meta_label = st.select_slider(
             "Meta de utilização",
-            options=["rho <= 1,0", "rho <= 0,8"],
-            value="rho <= 1,0",
+            options=["ρ <= 1,0", "ρ <= 0,8"],
+            value="ρ <= 1,0",
         )
     with col_custo:
         custo_mi = st.slider(
@@ -570,7 +576,7 @@ def render_dimensionar_nacional(indicadores: pd.DataFrame, params) -> None:
             value=10.0,
             step=0.5,
         )
-    meta = 1.0 if meta_label == "rho <= 1,0" else 0.8
+    meta = 1.0 if meta_label == "ρ <= 1,0" else 0.8
     plano = engine.plano_nacional(
         indicadores,
         params,
