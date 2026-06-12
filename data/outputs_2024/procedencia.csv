@@ -1,5 +1,5 @@
 metrica,valor
 incidencia,real
 oferta,real
-linacs,estimado (parque publicado)
-avisos,"SIA-AR sem arquivos para UFs ['AP', 'RR']; oferta zerada na base canonica | parque LINAC contem valores estimados/distribuidos proporcionalmente; use para exploracao e sensibilidade, nao como censo real por UF"
+linacs,real (RT2030)
+avisos,

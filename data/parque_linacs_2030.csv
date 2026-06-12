@@ -1,28 +1,28 @@
 uf,linacs_sus,fonte
-AC,1,Censo RT MS 2019 - proporcional incidencia INCA
-AL,3,Censo RT MS 2019 - proporcional incidencia INCA
-AM,2,Censo RT MS 2019 - proporcional incidencia INCA
-AP,0,Censo RT MS 2019 - confirmado sem servico
-BA,18,Censo RT MS 2019 - proporcional incidencia INCA
-CE,14,Censo RT MS 2019 - proporcional incidencia INCA
-DF,5,Censo RT MS 2019 - proporcional incidencia INCA
-ES,7,Censo RT MS 2019 - proporcional incidencia INCA
-GO,13,Censo RT MS 2019 - proporcional incidencia INCA
-MA,5,Censo RT MS 2019 - proporcional incidencia INCA
-MG,39,Censo RT MS 2019 - proporcional incidencia INCA
-MS,5,Censo RT MS 2019 - proporcional incidencia INCA
-MT,4,Censo RT MS 2019 - proporcional incidencia INCA
-PA,5,Censo RT MS 2019 - proporcional incidencia INCA
-PB,6,Censo RT MS 2019 - proporcional incidencia INCA
-PE,10,Censo RT MS 2019 - proporcional incidencia INCA
-PI,4,Censo RT MS 2019 - proporcional incidencia INCA
-PR,19,Censo RT MS 2019 - proporcional incidencia INCA
-RJ,35,Censo RT MS 2019 - proporcional incidencia INCA
-RN,5,Censo RT MS 2019 - proporcional incidencia INCA
-RO,1,Censo RT MS 2019 - proporcional incidencia INCA
-RR,0,Censo RT MS 2019 - confirmado sem servico
-RS,23,Censo RT MS 2019 - proporcional incidencia INCA
-SC,19,Censo RT MS 2019 - proporcional incidencia INCA
-SE,3,Censo RT MS 2019 - proporcional incidencia INCA
-SP,116,Censo RT MS 2019 - confirmado 116/363 LINACs
-TO,1,Censo RT MS 2019 - proporcional incidencia INCA
+AC,0,RT2030 Tabela 1 - sem acelerador instalado (NA)
+AL,5,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+AM,6,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+AP,0,RT2030 Tabela 1 - sem acelerador instalado (NA)
+BA,16,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+CE,12,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+DF,12,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+ES,6,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+GO,6,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+MA,4,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+MG,46,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+MS,5,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+MT,4,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+PA,10,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+PB,6,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+PE,11,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+PI,3,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+PR,31,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+RJ,38,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+RN,4,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+RO,4,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+RR,0,RT2030 Tabela 1 - sem acelerador instalado (NA)
+RS,31,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+SC,17,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+SE,3,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"
+SP,127,RT2030 Tabela 1 - instalado todos os setores (corrige estimativa anterior 116)
+TO,2,"RT2030 (Rosa et al., Lancet Oncol 2023) Tabela 1 - instalado todos os setores"

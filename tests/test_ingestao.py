@@ -187,7 +187,7 @@ def _csv_parque_completo(tmp_path: Path) -> Path:
     linhas = {"uf": list(geo.UFS), "linacs_sus": [13] * len(geo.UFS)}
     caminho = tmp_path / "parque.csv"
     pd.DataFrame(linhas).to_csv(caminho, index=False)
-    return caminho  # 27 * 13 = 351 (~ benchmark 360)
+    return caminho  # 27 * 13 = 351, ainda dentro da tolerancia do RT2030 409.
 
 
 def test_parque_normaliza_e_valida() -> None:
@@ -204,8 +204,9 @@ def test_parque_rejeita_valor_ausente() -> None:
 
 
 def test_benchmark_pega_transicao_cnes() -> None:
-    assert parque.checar_benchmark(27) is not None  # 27 vs ~360 -> avisa
-    assert parque.checar_benchmark(360) is None  # no alvo -> ok
+    assert parque.BENCHMARK_PARQUE_NACIONAL == 409
+    assert parque.checar_benchmark(27) is not None  # 27 vs 409 -> avisa
+    assert parque.checar_benchmark(409) is None  # no alvo RT2030 -> ok
     assert parque.checar_benchmark(351) is None  # dentro da tolerancia
 
 
@@ -221,13 +222,13 @@ def test_pipeline_fonte_parque_publicado(
         csv_parque=caminho,
     )
     schemas.validar_entrada(base.dados)
-    assert base.procedencia.linacs == "real (parque publicado)"
+    assert base.procedencia.linacs == "real (RT2030)"
     assert int(base.dados[schemas.COL_LINACS].sum()) == 351
-    # 351 ~ 360: nenhum aviso de benchmark (outras fontes podem ter avisos)
+    # 351 ainda fica dentro da tolerancia de benchmark (outras fontes podem avisar).
     assert not any("benchmark" in a for a in base.procedencia.avisos)
 
 
-def test_pipeline_parque_estimado_nao_vira_real(
+def test_pipeline_parque_rt2030_e_real(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(sia, "baixar_sia_ar", lambda *args, **kwargs: _raw_sia_ar())
@@ -236,6 +237,30 @@ def test_pipeline_parque_estimado_nao_vira_real(
         csv_inca="data/incidencia_inca_2026.csv",
         fonte_capacidade="parque_publicado",
         csv_parque="data/parque_linacs_2030.csv",
+    )
+
+    # O parque versionado e o censo RT2030 (real, sem termos de estimativa).
+    assert base.procedencia.linacs == "real (RT2030)"
+    assert not any("estimados" in aviso for aviso in base.procedencia.avisos)
+
+
+def test_pipeline_parque_estimado_ainda_e_sinalizado(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    # Salvaguarda: um parque cuja fonte indica estimativa deve continuar
+    # marcado como estimado (nao deve virar 'real' silenciosamente).
+    monkeypatch.setattr(sia, "baixar_sia_ar", lambda *args, **kwargs: _raw_sia_ar())
+    caminho = _csv_parque_completo(tmp_path)
+    df = pd.read_csv(caminho)
+    df["fonte"] = "Censo proporcional incidencia INCA - estimado"
+    df.to_csv(caminho, index=False)
+
+    base = construir_base(
+        ano=2026,
+        csv_inca="data/incidencia_inca_2026.csv",
+        fonte_capacidade="parque_publicado",
+        csv_parque=str(caminho),
     )
 
     assert base.procedencia.linacs == "estimado (parque publicado)"

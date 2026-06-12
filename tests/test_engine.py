@@ -89,7 +89,7 @@ def test_deficit_linacs_usa_throughput_injetado() -> None:
 
 def test_schema_declara_colunas_e_validar_entrada_falha_cedo() -> None:
     assert len(schemas.COLUNAS_ENTRADA) == 7
-    assert len(schemas.COLUNAS_SAIDA) == 6
+    assert len(schemas.COLUNAS_SAIDA) == 13
 
     sem_uf = _entrada_valida().drop(columns=schemas.COL_UF)
     with pytest.raises(ValueError, match="Colunas ausentes"):
@@ -116,6 +116,10 @@ def test_calcular_indicadores_valida_copia_e_calcula_seis_saidas() -> None:
     assert calculado.loc[0, schemas.COL_DEMANDA_REPRIMIDA] == pytest.approx(100)
     assert calculado.loc[1, schemas.COL_GRADE] == 4
     assert math.isinf(calculado.loc[1, schemas.COL_LSI])
+    assert calculado.loc[1, schemas.COL_DEF_FISICO] == 2
+    assert calculado.loc[1, schemas.COL_DEF_ONCO] == 4
+    assert calculado.loc[1, schemas.COL_DEF_TECNICO] == 6
+    assert calculado.loc[1, schemas.COL_DEF_PROFISSIONAIS] == 12
 
     with pytest.raises(ValueError, match="Colunas ausentes"):
         engine.calcular_indicadores(entrada.drop(columns=schemas.COL_UF), Params())
@@ -133,3 +137,7 @@ def test_resumo_nacional_agrega_resultados_regionais() -> None:
     assert resumo["linacs_instalados"] == 1
     assert resumo["lsi_nacional"] == pytest.approx(266.6667)
     assert resumo["deficit_linacs"] == 2
+    assert resumo["deficit_fisico_medico"] == 2
+    assert resumo["deficit_radio_oncologista"] == 4
+    assert resumo["deficit_tecnico_rtt"] == 6
+    assert resumo["deficit_profissionais_total"] == 12

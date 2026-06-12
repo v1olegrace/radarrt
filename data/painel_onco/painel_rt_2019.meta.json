@@ -1,0 +1,12 @@
+{
+  "fonte": "PAINEL-Oncologia (DATASUS)",
+  "url": "http://tabnet.datasus.gov.br/cgi/dhdat.exe?PAINEL_ONCO/PAINEL_ONCOLOGIABR.def",
+  "url_post": "http://tabnet.datasus.gov.br/cgi/webtabx.exe?PAINEL_ONCO/PAINEL_ONCOLOGIABR.def",
+  "ano": 2019,
+  "modalidade": "radioterapia",
+  "linha": "UF do tratamento",
+  "coluna": "Tempo Tratamento",
+  "extraido_em": "2026-06-12",
+  "janela_valida": "2019-2024",
+  "observacao": "Sem informacao de tratamento fica fora do denominador de pct_ate_60d; quando ausente no retorno filtrado por radioterapia, e materializada como zero."
+}

@@ -6,6 +6,7 @@ O modulo "palpa" o motor em quatro frentes:
 2. invariantes matematicos do motor;
 3. sensibilidade dos cenarios;
 4. consistencia fisica da base regional.
+5. validacao externa opcional contra o PAINEL-Oncologia.
 
 As funcoes sao puras em relacao ao ambiente: recebem DataFrames/parametros e
 devolvem checks, tabelas ou texto. Nao fazem rede nem I/O.
@@ -131,6 +132,150 @@ def invariantes(
             f"regional={deficit_regional:.0f} | agregado={deficit_agregado}",
         )
     )
+
+    total_equipes = float(calc[schemas.COL_DEF_PROFISSIONAIS].sum())
+    soma_categorias = float(
+        calc[schemas.COL_DEF_FISICO].sum()
+        + calc[schemas.COL_DEF_ONCO].sum()
+        + calc[schemas.COL_DEF_TECNICO].sum()
+    )
+    checks.append(
+        Check(
+            "Formacao: total nacional = fisico + onco + tecnico",
+            math.isclose(total_equipes, soma_categorias, rel_tol=1e-9),
+            f"total={total_equipes:.0f} | categorias={soma_categorias:.0f}",
+        )
+    )
+
+    exemplos_formacao = [
+        sum(engine.deficit_profissionais(n).values())
+        for n in range(0, 11)
+    ]
+    formacao_monotonica = all(
+        posterior >= anterior
+        for anterior, posterior in zip(
+            exemplos_formacao[:-1],
+            exemplos_formacao[1:],
+            strict=True,
+        )
+    )
+    checks.append(
+        Check(
+            "Formacao: mais deficit de LINACs nao reduz profissionais",
+            formacao_monotonica,
+            f"totais 0..10 LINACs={exemplos_formacao}",
+        )
+    )
+
+    sem_deficit = calc[schemas.COL_DEFICIT_LINACS] == 0
+    if sem_deficit.any():
+        zero_ok = bool(
+            (
+                calc.loc[
+                    sem_deficit,
+                    [
+                        schemas.COL_DEF_FISICO,
+                        schemas.COL_DEF_ONCO,
+                        schemas.COL_DEF_TECNICO,
+                        schemas.COL_DEF_PROFISSIONAIS,
+                    ],
+                ]
+                == 0
+            )
+            .all()
+            .all()
+        )
+    else:
+        zero_ok = True
+    checks.append(
+        Check(
+            "Formacao: deficit LINAC zero implica profissionais zero",
+            zero_ok,
+            f"{sem_deficit.sum()} UFs sem deficit de LINAC",
+        )
+    )
+
+    ordem_categorias = bool(
+        (
+            calc[schemas.COL_DEF_TECNICO] >= calc[schemas.COL_DEF_ONCO]
+        ).all()
+        and (
+            calc[schemas.COL_DEF_ONCO] >= calc[schemas.COL_DEF_FISICO]
+        ).all()
+    )
+    checks.append(
+        Check(
+            "Formacao: tecnico >= onco >= fisico em toda UF",
+            ordem_categorias,
+            "ok" if ordem_categorias else "ordem violada",
+        )
+    )
+
+    import numpy as np  # noqa: PLC0415 - importacao local para evitar dependencia circular no topo
+
+    util_col = calc[schemas.COL_UTILIZACAO]
+    lsi_col = calc[schemas.COL_LSI]
+    finitos = np.isfinite(util_col.to_numpy(float)) & np.isfinite(lsi_col.to_numpy(float))
+    if finitos.any():
+        consistente = bool(
+            pd.Series(util_col[finitos].to_numpy(float) * 100).round(6).equals(
+                pd.Series(lsi_col[finitos].to_numpy(float)).round(6)
+            )
+        )
+    else:
+        consistente = True
+    checks.append(
+        Check(
+            "Consistencia rho x LSI: util*100 == lsi (finitos)",
+            consistente,
+            "ok" if consistente else "divergencia encontrada",
+        )
+    )
+
+    espera100 = engine.tempo_espera_meses(1000.0, 9000.0, 20, params)
+    espera105 = engine.tempo_espera_meses(1000.0, 9000.0, 25, params)
+    checks.append(
+        Check(
+            "Monotonicidade da espera: mais LINACs nunca aumenta",
+            espera105 <= espera100,
+            f"20 LINACs={espera100:.2f}m; 25 LINACs={espera105:.2f}m",
+        )
+    )
+
+    espera_uf = calc[schemas.COL_TEMPO_ESPERA_MESES]
+    prazo_uf = calc[schemas.COL_PRAZO_60D]
+    rho_uf = calc[schemas.COL_UTILIZACAO]
+    divergentes = rho_uf >= 1.0
+    divergencia_ok = bool(
+        (espera_uf[divergentes].apply(math.isinf)).all()
+        and (~prazo_uf[divergentes]).all()
+    )
+    checks.append(
+        Check(
+            "Divergencia: rho >= 1 => espera=inf e prazo_60d=False",
+            divergencia_ok,
+            f"{divergentes.sum()} UFs com rho >= 1",
+        )
+    )
+
+    sem_linac = calc[schemas.COL_LINACS] == 0
+    if sem_linac.any():
+        sl_ok = bool(
+            calc.loc[sem_linac, schemas.COL_UTILIZACAO].apply(math.isinf).all()
+            and calc.loc[sem_linac, schemas.COL_TEMPO_ESPERA_MESES].apply(math.isinf).all()
+            and (~calc.loc[sem_linac, schemas.COL_PRAZO_60D]).all()
+            and (calc.loc[sem_linac, schemas.COL_GRADE] == engine.GRADE_SEM_LINAC).all()
+        )
+    else:
+        sl_ok = True
+    checks.append(
+        Check(
+            "Sem LINAC: util=inf, espera=inf, prazo=False, grade=4",
+            sl_ok,
+            f"{sem_linac.sum()} UFs sem LINAC",
+        )
+    )
+
     return checks
 
 
@@ -151,6 +296,145 @@ def sensibilidade(df_base: pd.DataFrame) -> pd.DataFrame:
             }
         )
     return pd.DataFrame(linhas)
+
+
+def resumo_regional_painel(
+    indicadores: pd.DataFrame,
+    painel: pd.DataFrame,
+) -> pd.DataFrame:
+    """Agrega rho e cumprimento da Lei dos 60 dias por regiao.
+
+    O percentual regional e ponderado pelo denominador observavel do PAINEL:
+    casos ate 30 + 31-60 + mais de 60 dias. "Sem informacao" fica fora.
+    """
+    joined = _juntar_painel(indicadores, painel)
+    colunas_contagem = ["casos_0_30", "casos_31_60", "casos_mais_60"]
+    if joined[colunas_contagem].isna().all().all():
+        return (
+            joined.groupby(schemas.COL_REGIAO, as_index=False)
+            .agg(
+                rho_medio=(schemas.COL_UTILIZACAO, "mean"),
+                pct_ate_60d_medio=("pct_ate_60d", "mean"),
+            )
+            [[schemas.COL_REGIAO, "rho_medio", "pct_ate_60d_medio"]]
+        )
+    agrupado = joined.groupby(schemas.COL_REGIAO, as_index=False).agg(
+        rho_medio=(schemas.COL_UTILIZACAO, "mean"),
+        casos_0_30=("casos_0_30", "sum"),
+        casos_31_60=("casos_31_60", "sum"),
+        casos_mais_60=("casos_mais_60", "sum"),
+    )
+    denom = (
+        agrupado["casos_0_30"]
+        + agrupado["casos_31_60"]
+        + agrupado["casos_mais_60"]
+    )
+    agrupado["pct_ate_60d_medio"] = (
+        (agrupado["casos_0_30"] + agrupado["casos_31_60"])
+        / denom.where(denom > 0)
+    )
+    return agrupado[[schemas.COL_REGIAO, "rho_medio", "pct_ate_60d_medio"]]
+
+
+def validar_contra_painel(
+    indicadores: pd.DataFrame,
+    painel: pd.DataFrame,
+) -> list[Check]:
+    """Cruza utilizacao rho por UF com % <=60 dias do PAINEL.
+
+    Regional e a afirmacao forte: Spearman entre rho medio regional e
+    pct_ate_60d regional deve ser negativo. UF e exploratorio, com caveat de
+    UF de tratamento e fluxo interestadual.
+    """
+    regional = resumo_regional_painel(indicadores, painel)
+    spearman_regional = _spearman(
+        regional["rho_medio"],
+        regional["pct_ate_60d_medio"],
+    )
+    regional_passou = pd.notna(spearman_regional) and spearman_regional < 0
+
+    uf = _juntar_painel(indicadores, painel)
+    spearman_uf = _spearman(uf[schemas.COL_UTILIZACAO], uf["pct_ate_60d"])
+    return [
+        Check(
+            "PAINEL-Oncologia regional: rho x pct <=60d",
+            bool(regional_passou),
+            (
+                f"Spearman={spearman_regional:.3f}; "
+                "esperado negativo (mais escassez, menor cumprimento)"
+            )
+            if pd.notna(spearman_regional)
+            else "Spearman indisponivel",
+        ),
+        Check(
+            "PAINEL-Oncologia UF exploratorio: rho x pct <=60d",
+            True,
+            (
+                f"Spearman={spearman_uf:.3f}; detalhe por UF tem caveat de "
+                "UF do tratamento e fluxo interestadual"
+            )
+            if pd.notna(spearman_uf)
+            else "Spearman indisponivel; detalhe por UF continua exploratorio",
+        ),
+    ]
+
+
+def _juntar_painel(indicadores: pd.DataFrame, painel: pd.DataFrame) -> pd.DataFrame:
+    """Prepara o join UF entre indicadores RadarRT e PAINEL."""
+    painel_pct = _painel_com_pct(painel)
+    colunas_indicadores = [
+        schemas.COL_UF,
+        schemas.COL_REGIAO,
+        schemas.COL_UTILIZACAO,
+        schemas.COL_GRADE,
+    ]
+    faltando = [col for col in colunas_indicadores if col not in indicadores.columns]
+    if faltando:
+        raise ValueError(f"indicadores sem colunas obrigatorias: {faltando}")
+    joined = indicadores[colunas_indicadores].merge(painel_pct, on=schemas.COL_UF, how="inner")
+    if joined.empty:
+        raise ValueError("validacao PAINEL sem UFs em comum")
+    return joined
+
+
+def _painel_com_pct(painel: pd.DataFrame) -> pd.DataFrame:
+    """Garante pct_ate_60d e contagens necessarias para ponderacao regional."""
+    colunas_contagem = ["casos_0_30", "casos_31_60", "casos_mais_60"]
+    faltando_contagem = [col for col in colunas_contagem if col not in painel.columns]
+    if "pct_ate_60d" not in painel.columns and faltando_contagem:
+        raise ValueError(
+            "painel precisa trazer pct_ate_60d ou contagens de tempo de tratamento"
+        )
+
+    out = painel.copy()
+    if "pct_ate_60d" not in out.columns:
+        denom = out["casos_0_30"] + out["casos_31_60"] + out["casos_mais_60"]
+        out["pct_ate_60d"] = (
+            (out["casos_0_30"] + out["casos_31_60"]) / denom.where(denom > 0)
+        )
+
+    for coluna in colunas_contagem:
+        if coluna not in out.columns:
+            out[coluna] = pd.NA
+    return out[
+        [
+            schemas.COL_UF,
+            "casos_0_30",
+            "casos_31_60",
+            "casos_mais_60",
+            "pct_ate_60d",
+        ]
+    ]
+
+
+def _spearman(x: pd.Series, y: pd.Series) -> float:
+    """Calcula Spearman sem scipy; infinitos entram no maior rank."""
+    pares = pd.DataFrame({"x": x, "y": y}).dropna()
+    if len(pares) < 2:
+        return math.nan
+    rank_x = pares["x"].rank(method="average")
+    rank_y = pares["y"].rank(method="average")
+    return float(rank_x.corr(rank_y, method="pearson"))
 
 
 def anualizar(oferta_parcial: float | pd.Series, meses_observados: int) -> float | pd.Series:
@@ -181,7 +465,7 @@ def consistencia_dados(
     aviso_benchmark = parque.checar_benchmark(total_linacs)
     checks.append(
         Check(
-            "Parque nacional dentro do benchmark (~360)",
+            "Parque nacional dentro do benchmark RT2030 (409)",
             aviso_benchmark is None,
             aviso_benchmark or f"{total_linacs} LINACs",
         )
@@ -270,7 +554,7 @@ def gerar_relatorio(
     add(f"   Oferta anualizada ............. {diag['oferta_anualizada']:>10,.0f}")
     add(f"   Demanda reprimida honesta ..... {diag['demanda_reprimida_honesta']:>10,.0f}")
     add(f"   LINACs instalados ............. {diag['linacs']:>10,.0f}")
-    add(f"   Deficit de LINACs ............. {diag['deficit_linacs']:>10,.0f}")
+    add(f"   Deficit para fila zero ........ {diag['deficit_linacs']:>10,.0f}")
     add(f"   LSI nacional .................. {diag['lsi_nacional']:>10,.1f}")
 
     todos = (

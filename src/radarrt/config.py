@@ -54,3 +54,38 @@ CENARIOS: dict[str, Params] = {
     "base": Params(rur=0.50, sus_share=0.80, nome="base"),
     "superior": Params(rur=0.64, sus_share=0.80, nome="superior"),
 }
+
+# Throughput (cursos/maquina/ano) para analise de sensibilidade.
+# 350 cobalto/antigo; 400 IAEA; 450 Lancet adotado; 500 Lancet maquina; 550 otimista.
+THROUGHPUTS_SENSIBILIDADE: tuple[int, ...] = (350, 400, 450, 500, 550)
+
+
+@dataclass(frozen=True)
+class RazoesEquipe:
+    """Profissionais por LINAC (Lancet Global Health 2024; IAEA Pub.1296).
+
+    Derivadas das razoes por paciente/ano divididas pelo throughput de 450:
+    radio-oncologista 1:250, fisico-medico 1:450, tecnico (RTT) 1:150.
+    """
+
+    fisico_medico: float = 1.0
+    radio_oncologista: float = 1.8
+    tecnico_rtt: float = 3.0
+
+    def __post_init__(self) -> None:
+        """Valida razoes positivas e finitas para dimensionamento de equipe."""
+        for nome, valor in (
+            ("fisico_medico", self.fisico_medico),
+            ("radio_oncologista", self.radio_oncologista),
+            ("tecnico_rtt", self.tecnico_rtt),
+        ):
+            if (
+                isinstance(valor, bool)
+                or not isinstance(valor, Real)
+                or not math.isfinite(float(valor))
+                or valor <= 0
+            ):
+                raise ValueError(f"{nome} deve ser numero finito positivo")
+
+
+RAZOES_EQUIPE_PADRAO = RazoesEquipe()

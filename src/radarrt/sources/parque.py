@@ -19,9 +19,8 @@ import pandas as pd
 from .. import geo, schemas
 
 # Total nacional de referencia para checagem de sanidade.
-# RT2030 (censo 2019): ~409 maquinas de teleterapia (SUS + privado);
-# parque SUS estimado na ordem de ~360. Ajuste conforme a fonte adotada.
-BENCHMARK_PARQUE_NACIONAL = 360
+# RT2030 (censo 2019): 409 maquinas de teleterapia instaladas (todos os setores).
+BENCHMARK_PARQUE_NACIONAL = 409
 TOLERANCIA_BENCHMARK = 0.40  # +-40% antes de emitir aviso
 COL_FONTE = "fonte"
 TERMOS_ESTIMATIVA = ("proporcional", "estimad")
@@ -102,7 +101,7 @@ def checar_benchmark(
 ) -> str | None:
     """Compara o total de LINACs com o benchmark. Retorna aviso ou None.
 
-    Pega automaticamente o caso 'CNES em transicao' (ex.: 27 LINACs vs ~360),
+    Pega automaticamente o caso 'CNES em transicao' (ex.: 27 LINACs vs 409),
     que produziria LSI e deficit absurdos.
     """
     if benchmark <= 0:

@@ -73,6 +73,12 @@ def test_parse_valor_uf_por_nome() -> None:
     assert intent.metrica == "deficit_linacs"
 
 
+def test_parse_formacao_especializada() -> None:
+    intent = I.parse("Quais estados tem mais profissionais a formar?")
+    assert intent.tipo == "ranking"
+    assert intent.metrica == "deficit_profissionais_total"
+
+
 def test_parse_comparacao_por_sigla() -> None:
     intent = I.parse("Compare SP e MG")
     assert intent.tipo == "comparacao"

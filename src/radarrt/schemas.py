@@ -31,6 +31,13 @@ COL_PACIENTES_POR_LINAC = "pacientes_por_linac"
 COL_LSI = "lsi"
 COL_GRADE = "grade"
 COL_DEFICIT_LINACS = "deficit_linacs"
+COL_DEF_FISICO = "deficit_fisico_medico"
+COL_DEF_ONCO = "deficit_radio_oncologista"
+COL_DEF_TECNICO = "deficit_tecnico_rtt"
+COL_DEF_PROFISSIONAIS = "deficit_profissionais_total"
+COL_UTILIZACAO = "utilizacao"
+COL_TEMPO_ESPERA_MESES = "tempo_espera_meses"
+COL_PRAZO_60D = "prazo_60d_alcancavel"
 
 COLUNAS_SAIDA: list[str] = [
     COL_DEMANDA_RT,
@@ -39,6 +46,13 @@ COLUNAS_SAIDA: list[str] = [
     COL_LSI,
     COL_GRADE,
     COL_DEFICIT_LINACS,
+    COL_DEF_FISICO,
+    COL_DEF_ONCO,
+    COL_DEF_TECNICO,
+    COL_DEF_PROFISSIONAIS,
+    COL_UTILIZACAO,
+    COL_TEMPO_ESPERA_MESES,
+    COL_PRAZO_60D,
 ]
 
 _COLUNAS_TEXTO = [COL_UF, COL_REGIAO]

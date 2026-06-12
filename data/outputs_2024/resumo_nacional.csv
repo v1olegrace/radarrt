@@ -2,6 +2,14 @@ metrica,valor
 demanda_rt_sus,207108.0
 oferta_realizada,141715.0
 demanda_reprimida,66539.0
-linacs_instalados,363.0
-lsi_nacional,126.78787878787878
-deficit_linacs,109.0
+linacs_instalados,409.0
+lsi_nacional,112.52811735941319
+deficit_linacs,86.0
+deficit_fisico_medico,86.0
+deficit_radio_oncologista,162.0
+deficit_tecnico_rtt,258.0
+deficit_profissionais_total,506.0
+utilizacao_nacional,1.125281173594132
+ufs_fila_divergente,19.0
+ufs_drenaveis,8.0
+tempo_espera_mediano_meses,6.608789346246974

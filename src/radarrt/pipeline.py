@@ -29,7 +29,7 @@ class Procedencia:
     def tudo_real(self) -> bool:
         """Indica se incidencia, oferta e capacidade vieram de fontes reais."""
         return all(
-            origem == "real"
+            origem.startswith("real")
             for origem in (self.incidencia, self.oferta, self.linacs)
         )
 
@@ -212,7 +212,7 @@ def _ingerir_linacs(
             proc.linacs = (
                 "estimado (parque publicado)"
                 if qualidade == "estimado"
-                else "real (parque publicado)"
+                else "real (RT2030)"
             )
             aviso_qualidade = parque.aviso_qualidade(qualidade)
             if aviso_qualidade:

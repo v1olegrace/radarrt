@@ -1,0 +1,125 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RadarRT — dashboard Cherenkov</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+:root{--void:#070B16;--abyss:#0C1322;--panel:#111A2E;--panel-2:#16203A;--line:rgba(132,160,210,.14);--line-strong:rgba(132,160,210,.28);--cherenkov:#3DDCFF;--cherenkov-soft:#7CE7FF;--violet:#7C5CFF;--ink:#EAF2FF;--muted:#8090B0;--coral:#FF5470;}
+*{box-sizing:border-box;}
+body{margin:0;font-family:'Poppins',sans-serif;color:var(--ink);min-height:100vh;
+ background:radial-gradient(1100px 560px at 12% -12%,rgba(61,220,255,.12),transparent 60%),
+  radial-gradient(820px 480px at 102% -6%,rgba(124,92,255,.10),transparent 55%),
+  linear-gradient(180deg,#070B16,#0A1020 60%,#080D1A);}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+ background:radial-gradient(640px 380px at 17% 6%,rgba(61,220,255,.10),transparent 62%);
+ animation:breathe 9s ease-in-out infinite;}
+.wrap{max-width:1120px;margin:0 auto;padding:3rem 2rem 4rem;position:relative;z-index:1;}
+@keyframes rise{from{opacity:0;transform:translateY(15px);}to{opacity:1;transform:none;}}
+@keyframes breathe{0%,100%{opacity:.45;transform:scale(1);}50%{opacity:.95;transform:scale(1.09);}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,84,112,.55);}70%{box-shadow:0 0 0 14px rgba(255,84,112,0);}100%{box-shadow:0 0 0 0 rgba(255,84,112,0);}}
+.an{opacity:0;animation:rise .62s cubic-bezier(.2,.7,.2,1) forwards;}
+.eyebrow{font-size:.72rem;letter-spacing:.34em;text-transform:uppercase;color:var(--cherenkov);font-weight:600;display:flex;align-items:center;gap:.7rem;}
+.eyebrow::before{content:"";width:34px;height:1px;background:linear-gradient(90deg,var(--cherenkov),transparent);}
+.title{font-size:2.7rem;line-height:1.08;font-weight:700;letter-spacing:-.02em;margin:.6rem 0 .5rem;}
+.title em{font-style:normal;color:var(--cherenkov);text-shadow:0 0 26px rgba(61,220,255,.45);}
+.sub{color:var(--muted);font-size:1.02rem;font-weight:300;max-width:62ch;}
+.prov{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem;}
+.chip{font-size:.72rem;color:var(--cherenkov-soft);border:1px solid var(--line-strong);border-radius:999px;padding:.3rem .8rem;background:rgba(61,220,255,.05);transition:.2s;}
+.chip:hover{border-color:var(--cherenkov);background:rgba(61,220,255,.10);}
+.chip b{color:var(--ink);font-weight:600;}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:1.9rem 0 .4rem;}
+.card{position:relative;overflow:hidden;border-radius:18px;background:linear-gradient(160deg,var(--panel),var(--abyss));border:1px solid var(--line);padding:1.15rem 1.2rem 1.25rem;box-shadow:0 18px 40px -28px rgba(0,0,0,.9);transition:transform .25s,border-color .25s,box-shadow .25s;}
+.card:hover{transform:translateY(-5px);border-color:var(--line-strong);box-shadow:0 28px 54px -26px rgba(0,0,0,.95);}
+.card::after{content:"";position:absolute;inset:0 0 auto 0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);}
+.card .lbl{font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600;}
+.card .val{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:2.35rem;line-height:1;margin:.55rem 0 .2rem;text-shadow:0 0 22px var(--glow);}
+.card:hover .val{text-shadow:0 0 32px var(--glow);}
+.card .unit{font-size:.74rem;color:var(--muted);font-weight:300;}
+.hook{border-radius:16px;padding:1.05rem 1.25rem;margin:1.4rem 0;background:linear-gradient(120deg,rgba(255,84,112,.14),rgba(255,84,112,.03));border:1px solid rgba(255,84,112,.34);display:flex;align-items:center;gap:1rem;}
+.hook .dot{width:11px;height:11px;border-radius:50%;background:var(--coral);animation:pulse 2s infinite;flex:none;}
+.hook b{color:var(--coral);}
+.sec{font-size:.72rem;letter-spacing:.26em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:2.2rem 0 .9rem;display:flex;align-items:center;gap:.7rem;}
+.sec::after{content:"";flex:1;height:1px;background:var(--line);}
+.grid{display:grid;grid-template-columns:1.35fr 1fr;gap:1.6rem;align-items:start;}
+#map{height:520px;border-radius:18px;border:1px solid var(--line);background:#080D1A;box-shadow:0 24px 60px -34px #000;}
+.leaflet-container{background:#080D1A;font-family:'Poppins';}
+.leaflet-interactive{transition:filter .15s;}
+.leaflet-interactive:hover{filter:brightness(1.3);}
+.legend{display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.7rem;}
+.g{font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;font-weight:600;padding:.22rem .55rem;border-radius:999px;}
+.rank{display:flex;flex-direction:column;gap:8px;}
+.row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:.7rem;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:.6rem .85rem;transition:transform .2s,border-color .2s,background .2s;}
+.row:hover{transform:translateX(5px);border-color:var(--line-strong);background:var(--panel-2);}
+.row .uf{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.95rem;width:2.4ch;}
+.row .meta{font-size:.72rem;color:var(--muted);}
+.row .fila{font-family:'JetBrains Mono',monospace;color:var(--cherenkov-soft);font-weight:500;display:flex;align-items:center;gap:.5rem;}
+.foot{color:var(--muted);font-size:.72rem;margin-top:2.4rem;border-top:1px solid var(--line);padding-top:.9rem;}
+@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr);}.grid{grid-template-columns:1fr;}.title{font-size:2rem;}}
+@media(prefers-reduced-motion:reduce){.an{animation:none;opacity:1;}body::before{animation:none;}.dot{animation:none;}.card:hover,.row:hover{transform:none;}}
+</style></head><body><div class="wrap">
+
+<div class="eyebrow an" style="animation-delay:.02s">RadarRT &middot; Radar de demanda reprimida</div>
+<div class="title an" style="animation-delay:.10s">A maior barreira da radioterapia<br>no Brasil é <em>invisível</em>.</div>
+<div class="sub an" style="animation-delay:.20s">Cruzamos incidência, produção ambulatorial e o parque de aceleradores para tornar a fila do SUS um número auditável por estado.</div>
+<div class="prov an" style="animation-delay:.30s">
+  <span class="chip">incidência <b>real</b></span><span class="chip">oferta <b>real</b></span><span class="chip">parque <b>real (RT2030)</b></span>
+</div>
+
+<div class="cards">
+  <div class="card an" style="--accent:#3DDCFF;--glow:rgba(61,220,255,.35);animation-delay:.38s"><div class="lbl">Demanda reprimida</div><div class="val" data-to="66539">0</div><div class="unit">pacientes/ano na fila</div></div>
+  <div class="card an" style="--accent:#FF5470;--glow:rgba(255,84,112,.30);animation-delay:.46s"><div class="lbl">Déficit para fila zero</div><div class="val" data-to="86">0</div><div class="unit">LINACs para demanda total</div></div>
+  <div class="card an" style="--accent:#7C5CFF;--glow:rgba(124,92,255,.30);animation-delay:.54s"><div class="lbl">LSI nacional</div><div class="val" data-to="112.5" data-dec="1">0</div><div class="unit">índice de escassez (100 = equilíbrio)</div></div>
+  <div class="card an" style="--accent:#7CE7FF;--glow:rgba(124,231,255,.28);animation-delay:.62s"><div class="lbl">LINACs instalados</div><div class="val" data-to="409">0</div><div class="unit">censo RT2030, todos os setores</div></div>
+</div>
+
+<div class="hook an" style="animation-delay:.70s"><span class="dot"></span><div><b>3 estados sem um único acelerador instalado</b> — AC, AP, RR. Segundo o censo RT2030, esses pacientes precisam atravessar fronteiras estaduais para tratar.</div></div>
+
+<div class="grid">
+ <div>
+  <div class="sec">Prioridade territorial</div>
+  <div id="map"></div>
+  <div class="legend" id="legend"></div>
+ </div>
+ <div>
+  <div class="sec">Top UFs por prioridade</div>
+  <div class="rank" id="rank"></div>
+ </div>
+</div>
+
+<div class="foot">RadarRT &middot; equipe Cherenkov — INCA 2026 &middot; SIA-AR 2024 &middot; parque LINAC real (censo RT2030). Demanda reprimida é inferência auditável, não contagem individual.</div>
+
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const D={"AC":{"g":4,"fila":31,"def":1,"lsi":"inf"},"AP":{"g":4,"fila":400,"def":1,"lsi":"inf"},"AM":{"g":0,"fila":152,"def":0,"lsi":74},"PA":{"g":0,"fila":2347,"def":0,"lsi":91},"RO":{"g":0,"fila":0,"def":0,"lsi":55},"RR":{"g":4,"fila":336,"def":1,"lsi":"inf"},"TO":{"g":1,"fila":0,"def":1,"lsi":105},"AL":{"g":0,"fila":388,"def":0,"lsi":97},"BA":{"g":2,"fila":5165,"def":12,"lsi":171},"CE":{"g":2,"fila":2583,"def":8,"lsi":161},"MA":{"g":2,"fila":675,"def":5,"lsi":214},"PB":{"g":2,"fila":1488,"def":3,"lsi":146},"PE":{"g":2,"fila":3197,"def":7,"lsi":160},"PI":{"g":2,"fila":703,"def":3,"lsi":188},"RN":{"g":2,"fila":1184,"def":3,"lsi":174},"SE":{"g":1,"fila":224,"def":1,"lsi":126},"DF":{"g":0,"fila":2087,"def":0,"lsi":56},"GO":{"g":2,"fila":2715,"def":8,"lsi":233},"MT":{"g":2,"fila":1187,"def":2,"lsi":136},"MS":{"g":1,"fila":1208,"def":2,"lsi":126},"ES":{"g":2,"fila":631,"def":3,"lsi":144},"MG":{"g":1,"fila":3228,"def":6,"lsi":113},"RJ":{"g":1,"fila":12353,"def":10,"lsi":124},"SP":{"g":0,"fila":19797,"def":0,"lsi":93},"PR":{"g":0,"fila":0,"def":0,"lsi":88},"RS":{"g":0,"fila":55,"def":0,"lsi":86},"SC":{"g":2,"fila":4405,"def":9,"lsi":148}};
+const HEX={0:"#2DD4A7",1:"#A3E635",2:"#FB923C",3:"#F87171",4:"#FF5470"};
+const LBL={0:"Controlado",1:"Atenção",2:"Crítico",3:"Severo",4:"Sem serviço"};
+const NM={"Acre":"AC","Alagoas":"AL","Amapá":"AP","Amazonas":"AM","Bahia":"BA","Ceará":"CE","Distrito Federal":"DF","Espírito Santo":"ES","Goiás":"GO","Maranhão":"MA","Mato Grosso":"MT","Mato Grosso do Sul":"MS","Minas Gerais":"MG","Pará":"PA","Paraíba":"PB","Paraná":"PR","Pernambuco":"PE","Piauí":"PI","Rio de Janeiro":"RJ","Rio Grande do Norte":"RN","Rio Grande do Sul":"RS","Rondônia":"RO","Roraima":"RR","Santa Catarina":"SC","São Paulo":"SP","Sergipe":"SE","Tocantins":"TO"};
+// contagem dos numeros (boot dos mostradores)
+const fmt=n=>n.toLocaleString('pt-BR');
+document.querySelectorAll('.val[data-to]').forEach(el=>{
+ const to=parseFloat(el.dataset.to),dec=parseInt(el.dataset.dec||"0");let t0=null;
+ const dur=1100,delay=parseFloat(getComputedStyle(el.closest('.card')).animationDelay)*1000||400;
+ function step(ts){if(!t0)t0=ts;const p=Math.min(1,(ts-t0)/dur);const e=1-Math.pow(1-p,3);
+  const v=to*e;el.textContent=dec?v.toFixed(dec).replace('.',','):fmt(Math.round(v));
+  if(p<1)requestAnimationFrame(step);}
+ setTimeout(()=>requestAnimationFrame(step),delay+150);
+});
+// legenda
+const lg=document.getElementById('legend');
+for(let g=0;g<5;g++){const s=document.createElement('span');s.className='g';s.style.background=HEX[g]+'22';s.style.color=HEX[g];s.style.border='1px solid '+HEX[g]+'55';s.textContent=g+' · '+LBL[g];lg.appendChild(s);}
+// ranking (grade desc, depois fila)
+const ord=Object.entries(D).sort((a,b)=>b[1].g-a[1].g||b[1].fila-a[1].fila).slice(0,8);
+const RG={"AP":"Norte","RR":"Norte","AC":"Norte","BA":"Nordeste","SC":"Sul","GO":"Centro-Oeste","CE":"Nordeste","PE":"Nordeste","MA":"Nordeste"};
+document.getElementById('rank').innerHTML=ord.map(([uf,d])=>`<div class="row"><span class="uf">${uf}</span><span class="meta">${RG[uf]||''} · déficit ${d.def} · LSI ${d.lsi}</span><span class="fila">${fmt(d.fila)} <span class="g" style="background:${HEX[d.g]}22;color:${HEX[d.g]};border:1px solid ${HEX[d.g]}55">${LBL[d.g]}</span></span></div>`).join('');
+// mapa coropletico
+const map=L.map('map',{zoomControl:false,attributionControl:false,scrollWheelZoom:false}).setView([-14.6,-53.5],3.6);
+function sig(p){return p.sigla||p.SIGLA||NM[p.name]||NM[p.nome]||NM[p.NOME]||null;}
+function style(f){const s=sig(f.properties),d=s&&D[s];return{fillColor:d?HEX[d.g]:"#26314d",fillOpacity:d?0.84:0.25,color:"#0A0F1C",weight:0.8};}
+fetch("https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/brazil-states.geojson").then(r=>r.json()).then(gj=>{
+ const layer=L.geoJSON(gj,{style,onEachFeature:(f,l)=>{const s=sig(f.properties),d=s&&D[s];if(!d)return;
+  l.bindTooltip(`<div style="background:#111A2E;border:1px solid rgba(132,160,210,.3);border-radius:9px;color:#EAF2FF;padding:.5rem .7rem;font-size:.78rem"><b style="font-family:'JetBrains Mono';color:${HEX[d.g]};font-size:.95rem">${s}</b> ${LBL[d.g]}<br>Fila: ${fmt(d.fila)}<br>Déficit: ${d.def} · LSI: ${d.lsi}</div>`,{sticky:true,opacity:1});}}).addTo(map);
+ map.fitBounds(layer.getBounds(),{padding:[8,8]});
+}).catch(()=>{document.getElementById('map').innerHTML='<p style="padding:2rem;color:#8090B0">Sem internet neste preview — no app o GeoJSON fica empacotado e roda offline.</p>';});
+</script></body></html>

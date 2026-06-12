@@ -1,4 +1,4 @@
-cenario,rur,sus_share,fracao_efetiva_rt,demanda_rt_sus,oferta_realizada,demanda_reprimida,linacs_instalados,lsi_nacional,deficit_linacs,ufs_grade_0,ufs_grade_1,ufs_grade_2,ufs_grade_3,ufs_grade_4
-conservador,0.483,0.652,0.31491600000000003,163054.05732000005,141715.0,30636.220040000015,363.0,99.81882909090912,36.0,7,12,6,0,2
-base,0.5,0.8,0.4,207108.0,141715.0,66539.0,363.0,126.78787878787878,109.0,1,6,18,0,2
-superior,0.64,0.8,0.512,265098.24,141715.0,123538.36,363.0,162.28848484848484,238.0,0,2,23,0,2
+cenario,rur,sus_share,fracao_efetiva_rt,demanda_rt_sus,oferta_realizada,demanda_reprimida,linacs_instalados,lsi_nacional,deficit_linacs,deficit_fisico_medico,deficit_radio_oncologista,deficit_tecnico_rtt,deficit_profissionais_total,utilizacao_nacional,ufs_fila_divergente,ufs_drenaveis,tempo_espera_mediano_meses,ufs_grade_0,ufs_grade_1,ufs_grade_2,ufs_grade_3,ufs_grade_4
+conservador,0.483,0.652,0.31491600000000003,163054.05732000005,141715.0,30636.220040000015,409.0,88.59226151589245,35.0,35.0,68.0,105.0,208.0,0.8859226151589245,14.0,13.0,0.0,13,6,5,0,3
+base,0.5,0.8,0.4,207108.0,141715.0,66539.0,409.0,112.52811735941319,86.0,86.0,162.0,258.0,506.0,1.125281173594132,19.0,8.0,6.608789346246974,8,5,11,0,3
+superior,0.64,0.8,0.512,265098.24,141715.0,123538.36,409.0,144.0359902200489,196.0,196.0,363.0,588.0,1147.0,1.440359902200489,24.0,3.0,23.36850477200425,3,5,16,0,3
