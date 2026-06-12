@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Polish the Streamlit presentation layer for live judging: stronger choropleth
+  contrast, clearer map note, high-contrast PAINEL validation hero, regional
+  bars, offline SVG scatter and dark validation table. No engine behavior or
+  mart contract changed.
+
 - Add throughput sensitivity analysis to prove robustness of the core
   conclusion across 350, 400, 450, 500 and 550 courses/LINAC-year:
   `sensibilidade_throughput.csv`, pure engine function, probe anchors and a

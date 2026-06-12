@@ -255,8 +255,9 @@ python scripts/probe_outputs.py
 .\.venv311\Scripts\python.exe run_indicadores.py
 ```
 
-Current local validation: 110/110 tests passing, ruff clean and operational
-probe 49/49 blocking checks OK with one methodological alert.
+Current local validation: 110/110 tests passing, ruff clean, operational
+probe 49/49 blocking checks OK with one methodological alert, and Playwright
+visual smoke checked for the Streamlit map and PAINEL validation tab.
 
 GitHub Actions runs tests and lint on Python 3.11 and 3.13.
 

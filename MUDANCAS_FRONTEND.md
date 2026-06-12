@@ -29,6 +29,13 @@ virar pergunta capciosa ao vivo.
 ### 4. ρ legível
 "rho" virou "ρ" nos rótulos de exibição (UFs ρ ≥ 1, Utilização (ρ)).
 
+### 5. Validação e mapa com contraste de palco
+A aba **Validação** ganhou uma leitura visual completa: hero de evidência,
+badges, cards, barras regionais, scatter SVG offline e tabela escura. O mapa da
+**Visão geral** agora usa cores mais fortes, contorno mais claro e nota curta de
+leitura antes do coroplético. A intenção é que o júri entenda o sinal visual sem
+precisar interpretar dataframe branco ou gráfico apagado.
+
 ## Roteiro sugerido de 3 atos (≈3min50s de tela)
 1. **Visão geral** (~1min) — o mapa acende, AC/AP/RR em coral. "66.539 na fila,
    3 estados sem um único acelerador." O cair-o-queixo de abertura.
@@ -41,6 +48,10 @@ As abas Robustez, Pergunte e Limitações ficam prontas para as perguntas do jú
 
 ## Validação
 - `py_compile`: OK
+- `ruff`: OK
+- `pytest`: 110/110
+- `probe_outputs`: 49/49 checks bloqueantes
+- Playwright visual: mapa e aba Validação renderizando sem erro de console
 - chaves de dados: 9/9 intactas
 - acentos de exibição: presentes
 - nenhuma função de cálculo alterada
