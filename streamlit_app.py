@@ -7,6 +7,7 @@ como um instrumento que ilumina a fila invisível.
 
 from __future__ import annotations
 
+import html
 import json
 import sys
 import unicodedata
@@ -45,8 +46,9 @@ UF_COORDS = {
 # Rampa de grade (0 controlado -> 4 sem serviço). Coral é o hook emocional.
 GRADE_HEX = {0: "#2DD4A7", 1: "#A3E635", 2: "#FB923C", 3: "#F87171", 4: "#FF5470"}
 GRADE_RGB = {
-    0: [45, 212, 167, 205], 1: [163, 230, 53, 215], 2: [251, 146, 60, 225],
-    3: [248, 113, 113, 235], 4: [255, 84, 112, 245],
+    0: [45, 212, 167, 235], 1: [190, 242, 100, 238],
+    2: [255, 174, 66, 242], 3: [255, 97, 112, 246],
+    4: [255, 43, 85, 252],
 }
 GRADE_LABEL = {
     0: "Controlado", 1: "Atenção", 2: "Crítico", 3: "Severo",
@@ -130,6 +132,7 @@ CSS = """
   color:var(--ink); text-shadow:0 0 22px var(--glow);
   white-space:nowrap; letter-spacing:0;
 }
+.rt-card__value--text{font-size:1.62rem;}
 .rt-card__unit{font-size:.74rem; color:var(--muted); font-weight:300;}
 
 /* ---- section header ---- */
@@ -159,6 +162,79 @@ CSS = """
 .rt-hook b{color:var(--coral);}
 @media (prefers-reduced-motion: reduce){.rt-hook__dot{animation:none;}}
 
+/* ---- validation story ---- */
+.rt-val-hero{
+  position:relative; overflow:hidden; border-radius:18px;
+  padding:1.25rem 1.35rem; margin:.2rem 0 1.15rem;
+  background:
+    linear-gradient(135deg, rgba(61,220,255,.18), rgba(124,92,255,.14) 52%, rgba(255,84,112,.15)),
+    linear-gradient(180deg, rgba(17,26,46,.96), rgba(9,14,28,.96));
+  border:1px solid rgba(124,231,255,.34);
+  box-shadow:0 24px 52px -36px rgba(61,220,255,.75);
+}
+.rt-val-hero::after{
+  content:""; position:absolute; inset:0 0 auto 0; height:2px;
+  background:linear-gradient(90deg, var(--cherenkov), var(--violet), var(--coral));
+}
+.rt-val-eyebrow{
+  color:var(--cherenkov-soft); font-size:.68rem; letter-spacing:.22em;
+  text-transform:uppercase; font-weight:700;
+}
+.rt-val-title{font-size:1.5rem; line-height:1.18; font-weight:700; margin:.4rem 0 .35rem;}
+.rt-val-copy{max-width:78ch; color:#C9D6F2; font-size:.92rem;}
+.rt-val-badges{display:flex; flex-wrap:wrap; gap:.55rem; margin-top:.9rem;}
+.rt-val-badges span{
+  border:1px solid rgba(124,231,255,.32); border-radius:999px;
+  padding:.42rem .7rem; background:rgba(8,13,26,.56); color:#DDE8FF; font-size:.78rem;
+}
+.rt-val-badges b{color:var(--cherenkov-soft);}
+.rt-val-panel{
+  border:1px solid rgba(132,160,210,.24); border-radius:16px;
+  background:linear-gradient(180deg, rgba(17,26,46,.86), rgba(9,14,28,.88));
+  padding:1rem 1.05rem; margin:1rem 0 1.2rem;
+}
+.rt-val-panel__title{
+  color:#EAF2FF; font-weight:700; font-size:.88rem; margin-bottom:.75rem;
+}
+.rt-val-row{
+  display:grid; grid-template-columns:132px 58px 1fr 62px; gap:.7rem;
+  align-items:center; padding:.48rem 0; border-top:1px solid rgba(132,160,210,.12);
+}
+.rt-val-row:first-of-type{border-top:0;}
+.rt-val-region{font-weight:700; color:#EAF2FF;}
+.rt-val-rho{
+  font-family:'JetBrains Mono',monospace; color:var(--coral); font-size:.78rem;
+}
+.rt-val-track{
+  height:12px; border-radius:999px; overflow:hidden; background:rgba(132,160,210,.16);
+}
+.rt-val-fill{display:block; height:100%; border-radius:inherit; box-shadow:0 0 16px rgba(61,220,255,.35);}
+.rt-val-pct{
+  font-family:'JetBrains Mono',monospace; color:var(--cherenkov-soft);
+  font-size:.78rem; text-align:right;
+}
+.rt-val-svg{
+  width:100%; height:auto; display:block; border-radius:16px;
+  background:linear-gradient(180deg, rgba(10,16,32,.96), rgba(7,11,22,.98));
+  border:1px solid rgba(132,160,210,.24);
+}
+.rt-val-table{
+  width:100%; border-collapse:separate; border-spacing:0; overflow:hidden;
+  border:1px solid rgba(132,160,210,.22); border-radius:14px; margin:1rem 0;
+  background:rgba(17,26,46,.72);
+}
+.rt-val-table th{
+  text-align:left; color:#7CE7FF; font-size:.72rem; letter-spacing:.12em;
+  text-transform:uppercase; padding:.75rem .9rem; background:rgba(61,220,255,.08);
+}
+.rt-val-table td{
+  color:#EAF2FF; padding:.68rem .9rem; border-top:1px solid rgba(132,160,210,.12);
+  font-size:.84rem;
+}
+.rt-val-table td:nth-child(2), .rt-val-table td:nth-child(3){
+  font-family:'JetBrains Mono',monospace; color:#DDE8FF;
+}
+
 /* ---- ranking ---- */
 .rt-rank{display:flex; flex-direction:column; gap:8px;}
 .rt-row{
@@ -175,6 +251,9 @@ CSS = """
 .rt-grade{
   font-size:.62rem; letter-spacing:.06em; text-transform:uppercase; font-weight:600;
   padding:.22rem .55rem; border-radius:999px; white-space:nowrap;
+}
+.rt-map-note{
+  color:#B8C7E8; font-size:.78rem; margin:.45rem 0 .2rem;
 }
 
 /* ---- streamlit widgets ---- */
@@ -222,6 +301,8 @@ CSS = """
 }
 @media (max-width:520px){
   .rt-cards{grid-template-columns:1fr;}
+  .rt-val-row{grid-template-columns:1fr; gap:.28rem;}
+  .rt-val-pct{text-align:left;}
 }
 @media (prefers-reduced-motion: reduce){
   .rt-anim{animation:none; opacity:1;}
@@ -291,6 +372,10 @@ def _pct_label(valor: float) -> str:
     return f"{_float_br(float(valor) * 100, 1)}%"
 
 
+def _html(valor: object) -> str:
+    return html.escape(str(valor), quote=True)
+
+
 def _tempo(valor: float) -> str:
     if valor == float("inf"):
         return "fila crescente"
@@ -301,14 +386,165 @@ def _cards_html(cards: list[tuple[str, str, str, str, str]]) -> None:
     html = '<div class="rt-cards">'
     for titulo, valor, unidade, accent, glow in cards:
         titulo_html = titulo.replace("ρ", '<span class="rt-rho">ρ</span>')
+        valor_class = "rt-card__value"
+        if any(letra.isalpha() for letra in str(valor)):
+            valor_class += " rt-card__value--text"
         html += (
             f'<div class="rt-card" style="--accent:{accent}; --glow:{glow}">'
             f'<div class="rt-card__eyebrow">{titulo_html}</div>'
-            f'<div class="rt-card__value">{valor}</div>'
+            f'<div class="{valor_class}">{valor}</div>'
             f'<div class="rt-card__unit">{unidade}</div></div>'
         )
     html += "</div>"
     st.markdown(html, unsafe_allow_html=True)
+
+
+def _render_validacao_hero(spearman: float, saturadas: str, piores: str) -> None:
+    """Resumo visual da validação externa contra o PAINEL-Oncologia."""
+    confirma = pd.notna(spearman) and spearman < 0
+    titulo = (
+        "O PAINEL-Oncologia reforça o sinal de saturação"
+        if confirma
+        else "O PAINEL-Oncologia entra como auditoria externa"
+    )
+    texto = (
+        "Quando a carga estrutural sobe, o cumprimento regional da Lei dos "
+        "60 dias cai. A leitura é independente do cálculo do RadarRT e usa "
+        "somente o cache PAINEL 2019-2024."
+        if confirma
+        else "A camada compara o RadarRT com a base oficial sem ajustar o "
+        "recorte do PAINEL. O resultado fica exposto, mesmo quando a correlação "
+        "não favorece a narrativa."
+    )
+    st.markdown(
+        f"""
+        <div class="rt-val-hero">
+          <div class="rt-val-eyebrow">Validação externa independente</div>
+          <div class="rt-val-title">{_html(titulo)}</div>
+          <div class="rt-val-copy">{_html(texto)}</div>
+          <div class="rt-val-badges">
+            <span><b>{_float_br(float(spearman), 2)}</b> Spearman regional</span>
+            <span><b>{_html(saturadas)}</b> maior ρ</span>
+            <span><b>{_html(piores)}</b> menor <=60d</span>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_validacao_regional(regional: pd.DataFrame) -> None:
+    """Barras regionais de alto contraste para o cumprimento em até 60 dias."""
+    tabela = regional.copy()
+    tabela["rho_plot"] = tabela["rho_medio"].replace(float("inf"), pd.NA)
+    linhas = ""
+    for _, row in tabela.sort_values("pct_ate_60d_medio").iterrows():
+        pct = float(row["pct_ate_60d_medio"]) if pd.notna(row["pct_ate_60d_medio"]) else 0.0
+        rho = row["rho_medio"]
+        rho_label = "∞" if float(rho) == float("inf") else _float_br(float(rho), 2)
+        largura = max(4.0, min(100.0, pct * 100))
+        cor = (
+            "linear-gradient(90deg, #FF5470, #FFAE42)"
+            if pct < 0.25
+            else "linear-gradient(90deg, #FFAE42, #7CE7FF)"
+        )
+        if pct >= 0.32:
+            cor = "linear-gradient(90deg, #2DD4A7, #7CE7FF)"
+        linhas += (
+            '<div class="rt-val-row">'
+            f'<div class="rt-val-region">{_html(row["regiao"])}</div>'
+            f'<div class="rt-val-rho">ρ {rho_label}</div>'
+            '<div class="rt-val-track">'
+            f'<span class="rt-val-fill" style="width:{largura:.1f}%; background:{cor}"></span>'
+            '</div>'
+            f'<div class="rt-val-pct">{_pct_label(pct)}</div>'
+            '</div>'
+        )
+    st.markdown(
+        f"""
+        <div class="rt-val-panel">
+          <div class="rt-val-panel__title">Cumprimento regional da Lei dos 60 dias</div>
+          {linhas}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_validacao_scatter(painel: pd.DataFrame) -> None:
+    """Scatter SVG offline: ρ estrutural x percentual em até 60 dias por UF."""
+    scatter = painel.dropna(subset=["pct_ate_60d"]).copy()
+    if scatter.empty:
+        return
+    finitos = scatter.loc[
+        scatter["utilizacao"].astype(float) < float("inf"),
+        "utilizacao",
+    ].astype(float)
+    x_max = max(2.0, float(finitos.max()) * 1.12 if not finitos.empty else 2.0)
+    y_max = max(40.0, float(scatter["pct_ate_60d"].max()) * 120)
+    plot = {"left": 58, "top": 28, "right": 690, "bottom": 282}
+    largura = plot["right"] - plot["left"]
+    altura = plot["bottom"] - plot["top"]
+    corte_x = plot["left"] + min(1.0 / x_max, 1.0) * largura
+    elementos = [
+        f'<line x1="{plot["left"]}" y1="{plot["bottom"]}" x2="{plot["right"]}" '
+        f'y2="{plot["bottom"]}" stroke="rgba(234,242,255,.35)" />',
+        f'<line x1="{plot["left"]}" y1="{plot["top"]}" x2="{plot["left"]}" '
+        f'y2="{plot["bottom"]}" stroke="rgba(234,242,255,.35)" />',
+        f'<line x1="{corte_x:.1f}" y1="{plot["top"]}" x2="{corte_x:.1f}" '
+        f'y2="{plot["bottom"]}" stroke="#FF5470" stroke-dasharray="6 6" />',
+        f'<text x="{corte_x + 8:.1f}" y="{plot["top"] + 14}" '
+        'fill="#FF9AAD" font-size="12">ρ = 1</text>',
+    ]
+    for grade in range(5):
+        pontos = scatter.loc[scatter["grade"].astype(int) == grade]
+        for _, row in pontos.iterrows():
+            util = float(row["utilizacao"])
+            util = x_max if util == float("inf") else min(util, x_max)
+            pct = float(row["pct_ate_60d"]) * 100
+            x = plot["left"] + (util / x_max) * largura
+            y = plot["bottom"] - min(pct / y_max, 1.0) * altura
+            cor = GRADE_HEX[int(row["grade"])]
+            elementos.append(
+                f'<circle cx="{x:.1f}" cy="{y:.1f}" r="6.2" fill="{cor}" '
+                'stroke="rgba(234,242,255,.84)" stroke-width="1.1">'
+                f'<title>{_html(row["uf"])} · ρ {_pct(row["utilizacao"])} · '
+                f'{_pct_label(row["pct_ate_60d"])}</title></circle>'
+            )
+    svg = (
+        '<svg class="rt-val-svg" viewBox="0 0 720 320" role="img" '
+        'aria-label="Dispersão entre saturação estrutural e cumprimento em até 60 dias">'
+        '<text x="24" y="22" fill="#EAF2FF" font-size="14" font-weight="700">'
+        'UFs: saturação estrutural x atendimento em até 60 dias</text>'
+        '<text x="24" y="306" fill="#8090B0" font-size="12">ρ estrutural</text>'
+        '<text x="18" y="44" fill="#8090B0" font-size="12">% <=60d</text>'
+        f'{"".join(elementos)}</svg>'
+    )
+    st.markdown(svg, unsafe_allow_html=True)
+
+
+def _render_validacao_tabela(regional: pd.DataFrame) -> None:
+    """Tabela escura para manter a validação no mesmo sistema visual."""
+    linhas = ""
+    for _, row in regional.sort_values("pct_ate_60d_medio").iterrows():
+        rho = row["rho_medio"]
+        rho_label = "∞" if float(rho) == float("inf") else _float_br(float(rho), 4)
+        linhas += (
+            "<tr>"
+            f"<td>{_html(row['regiao'])}</td>"
+            f"<td>{rho_label}</td>"
+            f"<td>{_pct_label(row['pct_ate_60d_medio'])}</td>"
+            "</tr>"
+        )
+    st.markdown(
+        f"""
+        <table class="rt-val-table">
+          <thead><tr><th>Região</th><th>ρ médio</th><th>% <=60d médio</th></tr></thead>
+          <tbody>{linhas}</tbody>
+        </table>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -449,7 +685,8 @@ def render_coropletico(indicadores: pd.DataFrame, geojson: dict) -> bool:
     camada = pdk.Layer(
         "GeoJsonLayer", data=enriquecido, pickable=True, stroked=True,
         filled=True, get_fill_color="properties.fill",
-        get_line_color=[8, 14, 26, 210], line_width_min_pixels=0.7, opacity=0.82,
+        get_line_color=[234, 242, 255, 155], line_width_min_pixels=1.15,
+        opacity=0.96, auto_highlight=True, highlight_color=[255, 255, 255, 70],
     )
     deck = pdk.Deck(
         map_style=None,
@@ -478,26 +715,39 @@ def preparar_mapa(indicadores: pd.DataFrame) -> pd.DataFrame:
     # Grade 4 (sem serviço) recebe presença mínima alta: o hook não pode sumir.
     piso = mapa["grade"].map(lambda g: 95000 if int(g) == 4 else 0)
     mapa["radius"] = base.clip(lower=0) + piso
+    mapa["radius_halo"] = mapa["radius"] * 1.34
     return mapa
 
 
 def render_mapa(indicadores: pd.DataFrame) -> None:
     """Mapa por prioridade: estados preenchidos se houver geojson, senão bolhas."""
+    st.markdown(
+        '<div class="rt-map-note">Cor mais quente = maior prioridade territorial; '
+        'grade 4 marca UF sem LINAC instalado.</div>',
+        unsafe_allow_html=True,
+    )
     geojson = _carregar_geojson()
     if geojson is not None and render_coropletico(indicadores, geojson):
         _legenda_grades()
         return
     mapa = preparar_mapa(indicadores)
+    halo = pdk.Layer(
+        "ScatterplotLayer", data=mapa,
+        get_position="[lon, lat]", get_radius="radius_halo",
+        get_fill_color="[color[0], color[1], color[2], 54]",
+        pickable=False, stroked=False,
+    )
     camada = pdk.Layer(
         "ScatterplotLayer", data=mapa,
         get_position="[lon, lat]", get_radius="radius",
-        get_fill_color="color", pickable=True, stroked=True, opacity=0.85,
-        get_line_color=[8, 14, 26, 220], line_width_min_pixels=1,
+        get_fill_color="color", pickable=True, stroked=True, opacity=0.96,
+        get_line_color=[234, 242, 255, 170], line_width_min_pixels=1.2,
+        auto_highlight=True, highlight_color=[255, 255, 255, 80],
     )
     deck = pdk.Deck(
         map_style=None,
         initial_view_state=pdk.ViewState(latitude=-14.6, longitude=-53.2, zoom=3.05),
-        layers=[camada],
+        layers=[halo, camada],
         tooltip={
             "html": "<b>{uf}</b> &middot; grade {grade}<br/>"
                     "Fila: {demanda_reprimida}<br/>Déficit: {deficit_linacs}",
@@ -768,23 +1018,7 @@ def render_validacao_painel(mart: dict[str, pd.DataFrame]) -> None:
     saturadas = ", ".join(
         regional.sort_values("rho_medio", ascending=False).head(2)["regiao"].tolist()
     )
-    if pd.notna(spearman) and spearman < 0:
-        tese = (
-            "As regiões mais saturadas no RadarRT também aparecem com menor "
-            "cumprimento da Lei dos 60 dias no PAINEL-Oncologia."
-        )
-    else:
-        tese = (
-            "Nesta extração, a correlação regional não veio negativa; o dado "
-            "oficial é reportado sem ajuste de recorte."
-        )
-    st.markdown(
-        f"""
-        <div class="rt-hook"><span class="rt-hook__dot"></span>
-        <div><b>{tese}</b> Maior ρ: {saturadas}. Menor pct <=60d: {piores}.</div></div>
-        """,
-        unsafe_allow_html=True,
-    )
+    _render_validacao_hero(spearman, saturadas, piores)
 
     pior_regiao = regional.sort_values("pct_ate_60d_medio").iloc[0]
     ufs_saturadas = int((painel["utilizacao"].astype(float) >= 1.0).sum())
@@ -802,22 +1036,10 @@ def render_validacao_painel(mart: dict[str, pd.DataFrame]) -> None:
              "UF do tratamento", "var(--cherenkov-soft)", "rgba(124,231,255,.28)"),
         ]
     )
+    _render_validacao_regional(regional)
 
-    scatter = painel.copy()
-    finitos = scatter.loc[scatter["utilizacao"].astype(float) < float("inf"), "utilizacao"]
-    teto = float(finitos.max()) * 1.08 if not finitos.empty else 1.0
-    scatter["utilizacao_plot"] = scatter["utilizacao"].map(
-        lambda valor: teto if float(valor) == float("inf") else float(valor)
-    )
-    scatter["pct_ate_60d_pct"] = scatter["pct_ate_60d"].astype(float) * 100
-    st.scatter_chart(
-        scatter,
-        x="utilizacao_plot",
-        y="pct_ate_60d_pct",
-        color="regiao",
-        use_container_width=True,
-    )
-    st.dataframe(regional, hide_index=True, use_container_width=True)
+    _render_validacao_scatter(painel)
+    _render_validacao_tabela(regional)
     st.caption(
         "PAINEL-Oncologia 2019-2024. Linha: UF do tratamento; coluna: tempo "
         "tratamento; modalidade: radioterapia. 'Sem informação' fica fora do "
