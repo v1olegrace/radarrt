@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add 2019-2024 SIA-AR coverage series (`serie_temporal.csv`) comparing
+  delivered external-radiotherapy offer with the base demand reference line,
+  including procedure-code consistency flags, the 2019 registration caveat and
+  the COVID-19 context marker in the dashboard.
+
 - Polish the Streamlit presentation layer for live judging: stronger choropleth
   contrast, clearer map note, high-contrast PAINEL validation hero, regional
   bars, offline SVG scatter and dark validation table. No engine behavior or

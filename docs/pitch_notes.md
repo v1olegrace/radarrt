@@ -145,6 +145,28 @@ throughput  deficit  UFs rho>=1  LSI nacional  fila
 Frase curta: 450 e conservador, nao inflado. Com a ancora IAEA de 400, o
 deficit seria 126, nao 86.
 
+## Série Temporal de Cobertura
+
+Pergunta provavel:
+
+> A fila esta crescendo?
+
+Resposta pronta:
+
+> A forma honesta de olhar nao e inventar uma demanda anual precisa, porque o
+> INCA reestima incidencia por ciclos. O RadarRT mostra cobertura: oferta
+> SIA-AR realizada contra a demanda RT-SUS de referencia. O SUS quase dobrou a
+> producao registrada desde 2019 e ainda assim, em 2024, cobre so 68,4% da
+> necessidade. Isso mostra esforco real e gap estrutural ao mesmo tempo.
+
+Numero de palco do mart atual: a oferta registrada cresceu 88,3% desde 2019
+(75.260 -> 141.715), mas 2019 deve ser tratado com caveat por possivel
+subestimacao de registro/cobertura. Todos os anos ficam abaixo da demanda de
+referencia. O gap de 2024 na serie e nacional agregado (65.393), diferente da
+fila territorial conservadora do mart (66.539).
+Se algum ano vier com `codigos_ausentes` em nova extracao, diga isso antes de
+usar a tendencia. Codigos ausentes: nenhum na extracao atual.
+
 ### Metodologia da Camada de Tempo
 
 Tres grandezas, todas derivadas do que ja existe no mart:

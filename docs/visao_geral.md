@@ -36,6 +36,8 @@ cada estado, ele estima:
 - auditoria de cenarios de expansao do parque.
 - validacao externa da camada de tempo contra o PAINEL-Oncologia.
 - robustez da conclusao central a diferentes throughputs por LINAC.
+- serie de cobertura nacional 2019-2024: oferta SIA-AR realizada versus demanda
+  RT-SUS de referencia.
 
 ## Camada de Tempo (Fase A)
 
@@ -201,13 +203,31 @@ Spearman regional rho x pct_ate_60d: -0,500
 Spearman UF rho x pct_ate_60d:       -0,100
 ```
 
+## Serie Temporal de Cobertura (Fase E)
+
+A Fase E adiciona `serie_temporal.csv`, uma visao nacional de cobertura:
+oferta SIA-AR realizada em radioterapia externa contra a demanda RT-SUS de
+referencia do mart. Ela usa o mesmo conjunto de procedimentos da base 2024 e
+checa `codigos_ausentes` ano a ano antes de comparar a serie.
+
+A metrica deve ser narrada como cobertura, nao como fila. Em 2024, o gap
+nacional agregado da serie e 65.393; a fila-heroi do projeto continua sendo a
+soma territorial conservadora dos deficits por UF, 66.539 pacientes. Essa
+distincao existe porque capacidade instalada nao e plenamente transferivel
+entre estados.
+
+Leitura segura: a oferta registrada cresce de 75.260 em 2019 para 141.715 em
+2024, mas 2019 deve ser apresentado com caveat de possivel subregistro ou
+cobertura incompleta de codigos. A faixa 2020-2021 e contexto COVID-19, sem
+afirmar queda de producao anual porque a serie atual nao sustenta essa leitura.
+
 ## Fluxo de Ponta a Ponta
 
 ```text
 INCA 2026, incidencia --------\
 SIA-AR 2024, oferta -----------> base canonica -> motor deterministico -> CSVs do mart
 Parque LINAC, RT2030 ----------/                                      |
-                                                                      +-> dashboard
+SIA-AR 2019-2024 ---------------> serie de cobertura -----------------+-> dashboard
                                                                       +-> agente SQL offline
 PAINEL-Oncologia 2019-2024 ---> validacao externa opcional ------------/
 ```
@@ -347,6 +367,7 @@ data/outputs_2024/plano_nacional.csv
 data/outputs_2024/cenarios_parque.csv
 data/outputs_2024/painel_validacao.csv
 data/outputs_2024/painel_validacao_regional.csv
+data/outputs_2024/serie_temporal.csv
 data/outputs_2024/resumo_nacional.csv
 data/outputs_2024/auditoria_base.csv
 data/outputs_2024/procedencia.csv
@@ -374,6 +395,7 @@ auditoria expansao superior: 196, 167, 86
 sensibilidade throughput deficit: 201, 126, 86, 59, 44
 sensibilidade throughput UFs rho>=1: 24, 22, 19, 18, 17
 PAINEL Spearman regional: -0,500
+serie de cobertura 2024: oferta 141.715, gap nacional agregado 65.393
 ```
 
 Esses numeros estao travados nos testes e no probe operacional para detectar
@@ -593,10 +615,11 @@ A troca para RT2030 real esta aplicada e validada:
 - anchors novos do mart: demanda reprimida 66.539, deficit 86, LSI 112,5,
   formacao 86/162/258/506, planos 86/506/R$860M e 183/1070/R$1,83B,
   expansao base 86/56/0 e superior 196/167/86, throughput 201/126/86/59/44,
-  PAINEL Spearman -0,5;
-- suite automatizada: 110 testes passando;
+  PAINEL Spearman -0,5, serie de cobertura 2024 oferta 141.715 e gap nacional
+  agregado 65.393;
+- suite automatizada: 116 testes passando;
 - lint: `ruff check .` limpo;
-- probe operacional: 49/49 checks bloqueantes OK e 1 alerta metodologico.
+- probe operacional: 51/51 checks bloqueantes OK e 1 alerta metodologico.
 
 ## Proximos Upgrades
 

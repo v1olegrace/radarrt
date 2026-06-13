@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import tempfile
+from collections.abc import Iterable
 from pathlib import Path
 
 import pandas as pd
@@ -16,27 +17,28 @@ logger = logging.getLogger(__name__)
 # Procedimentos principais vigentes desde maio de 2019 para radioterapia
 # externa de neoplasias malignas. Braquiterapia e doencas benignas ficam fora
 # porque nao consomem LINAC ou nao pertencem a incidencia oncologica usada.
+PROC_RADIOTERAPIA_EXTERNA_LABELS: dict[str, str] = {
+    "0304010367": "Radioterapia de cabeca e pescoco",
+    "0304010375": "Radioterapia de aparelho digestivo",
+    "0304010383": "Radioterapia de torax",
+    "0304010391": "Radioterapia de ossos/cartilagens/partes moles",
+    "0304010405": "Radioterapia de pele",
+    "0304010413": "Radioterapia de mama",
+    "0304010421": "Radioterapia de cancer ginecologico",
+    "0304010448": "Radioterapia de penis",
+    "0304010456": "Radioterapia de prostata",
+    "0304010472": "Radioterapia de aparelho urinario",
+    "0304010480": "Radioterapia de olhos e anexos",
+    "0304010502": "Radioterapia de sistema nervoso central",
+    "0304010510": "Radioterapia estereotaxica",
+    "0304010529": "Radioterapia de metastase em sistema nervoso central",
+    "0304010537": "Radioterapia de plasmocitoma/mieloma/metastases",
+    "0304010545": "Radioterapia de cadeia linfatica",
+    "0304010553": "Radioterapia de linfoma e leucemia",
+    "0304010561": "Radioterapia de corpo inteiro",
+}
 PROC_RADIOTERAPIA_EXTERNA: frozenset[str] = frozenset(
-    {
-        "0304010367",  # Cabeca e pescoco
-        "0304010375",  # Aparelho digestivo
-        "0304010383",  # Torax
-        "0304010391",  # Ossos/cartilagens/partes moles
-        "0304010405",  # Pele
-        "0304010413",  # Mama
-        "0304010421",  # Cancer ginecologico
-        "0304010448",  # Penis
-        "0304010456",  # Prostata
-        "0304010472",  # Aparelho urinario
-        "0304010480",  # Olhos e anexos
-        "0304010502",  # Sistema nervoso central
-        "0304010510",  # Radioterapia estereotaxica
-        "0304010529",  # Metastase em sistema nervoso central
-        "0304010537",  # Plasmocitoma/mieloma/metastases
-        "0304010545",  # Cadeia linfatica
-        "0304010553",  # Linfoma e leucemia
-        "0304010561",  # Corpo inteiro
-    }
+    PROC_RADIOTERAPIA_EXTERNA_LABELS
 )
 
 _COL_MUNICIPIO = "AP_UFMUN"
@@ -52,9 +54,9 @@ def baixar_sia_ar(ufs: list[str], ano: int, meses: list[int]) -> pd.DataFrame:
     objeto Group com a string 'AR' - nunca iguala. Por isso usamos o cliente
     FTP diretamente e filtramos por f.group.name manualmente.
     """
-    if ano < 2020:
+    if ano < 2019:
         raise ValueError(
-            "O normalizador SIA suporta anos completos a partir de 2020, "
+            "O normalizador SIA suporta anos completos a partir de 2019, "
             "apos a mudanca do modelo de radioterapia do SIGTAP"
         )
 
@@ -110,6 +112,7 @@ def baixar_sia_ar(ufs: list[str], ano: int, meses: list[int]) -> pd.DataFrame:
 def normalizar_sia_ar(
     df_raw: pd.DataFrame,
     ufs: list[str] | tuple[str, ...] | None = None,
+    codigos: Iterable[str] | None = None,
 ) -> pd.DataFrame:
     """Conta CNS distintos por UF entre procedimentos de RT externa."""
     faltando = [
@@ -126,8 +129,9 @@ def normalizar_sia_ar(
     df[_COL_PACIENTE] = df[_COL_PACIENTE].replace("", pd.NA)
     df[schemas.COL_UF] = df[_COL_MUNICIPIO].map(geo.uf_de_codigo_municipio)
 
+    codigos_alvo = _normalizar_codigos(codigos or PROC_RADIOTERAPIA_EXTERNA)
     df = df[
-        df[_COL_PROC].isin(PROC_RADIOTERAPIA_EXTERNA)
+        df[_COL_PROC].isin(codigos_alvo)
         & df[_COL_PACIENTE].notna()
         & df[schemas.COL_UF].notna()
     ]
@@ -139,6 +143,20 @@ def normalizar_sia_ar(
     return _completar_ufs(agrupado, schemas.COL_OFERTA_APAC, ufs)
 
 
+def codigos_presentes_sia_ar(
+    df_raw: pd.DataFrame,
+    codigos: Iterable[str] | None = None,
+) -> set[str]:
+    """Lista codigos de procedimento presentes no SIA-AR bruto."""
+    if _COL_PROC not in df_raw.columns:
+        raise ValueError(f"SIA-AR sem coluna esperada: {_COL_PROC}")
+
+    presentes = set(_normalizar_codigo(df_raw[_COL_PROC], largura=10).dropna())
+    if codigos is None:
+        return presentes
+    return presentes & _normalizar_codigos(codigos)
+
+
 def _normalizar_codigo(serie: pd.Series, largura: int) -> pd.Series:
     """Normaliza codigos SIA preservando zeros a esquerda."""
     return (
@@ -147,6 +165,11 @@ def _normalizar_codigo(serie: pd.Series, largura: int) -> pd.Series:
         .str.replace(r"\.0$", "", regex=True)
         .str.zfill(largura)
     )
+
+
+def _normalizar_codigos(codigos: Iterable[str]) -> frozenset[str]:
+    """Normaliza um conjunto de codigos SIA para comparacoes."""
+    return frozenset(pd.Series(list(codigos), dtype="string").str.strip().str.zfill(10))
 
 
 def _configurar_cache_pysus() -> None:

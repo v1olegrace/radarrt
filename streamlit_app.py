@@ -115,6 +115,7 @@ CSS = """
   background:linear-gradient(160deg, var(--panel) 0%, var(--abyss) 100%);
   border:1px solid var(--line); padding:1.15rem 1.2rem 1.25rem;
   box-shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 18px 40px -28px rgba(0,0,0,.9);
+  min-height:9rem;
 }
 .rt-card::after{
   content:""; position:absolute; inset:0 0 auto 0; height:2px;
@@ -133,6 +134,7 @@ CSS = """
   white-space:nowrap; letter-spacing:0;
 }
 .rt-card__value--text{font-size:1.62rem;}
+.rt-card__value--xs{font-size:1.05rem; line-height:1.2; white-space:normal; word-break:break-word;}
 .rt-card__unit{font-size:.74rem; color:var(--muted); font-weight:300;}
 
 /* ---- section header ---- */
@@ -334,6 +336,7 @@ def carregar_mart() -> dict[str, pd.DataFrame]:
     opcionais = {
         "painel_validacao": OUTPUT_DIR / "painel_validacao.csv",
         "painel_validacao_regional": OUTPUT_DIR / "painel_validacao_regional.csv",
+        "serie_temporal": OUTPUT_DIR / "serie_temporal.csv",
     }
     for chave, caminho in opcionais.items():
         if caminho.exists():
@@ -388,7 +391,10 @@ def _cards_html(cards: list[tuple[str, str, str, str, str]]) -> None:
         titulo_html = titulo.replace("ρ", '<span class="rt-rho">ρ</span>')
         valor_class = "rt-card__value"
         if any(letra.isalpha() for letra in str(valor)):
-            valor_class += " rt-card__value--text"
+            if len(str(valor)) > 9:
+                valor_class += " rt-card__value--xs"
+            else:
+                valor_class += " rt-card__value--text"
         html += (
             f'<div class="rt-card" style="--accent:{accent}; --glow:{glow}">'
             f'<div class="rt-card__eyebrow">{titulo_html}</div>'
@@ -486,6 +492,18 @@ def _render_validacao_scatter(painel: pd.DataFrame) -> None:
     largura = plot["right"] - plot["left"]
     altura = plot["bottom"] - plot["top"]
     corte_x = plot["left"] + min(1.0 / x_max, 1.0) * largura
+
+    # Ticks eixo X (ρ estrutural): 0, 1, 2
+    ticks_x = [v for v in [0.0, 1.0, 2.0] if v <= x_max * 1.01]
+    # Ticks eixo Y (% <=60d): 0%, 25%, 50%
+    ticks_y = [v for v in [0.0, 25.0, 50.0] if v <= y_max * 1.01]
+
+    def _tx(v: float) -> float:
+        return plot["left"] + (v / x_max) * largura
+
+    def _ty(pct: float) -> float:
+        return plot["bottom"] - min(pct / y_max, 1.0) * altura
+
     elementos = [
         f'<line x1="{plot["left"]}" y1="{plot["bottom"]}" x2="{plot["right"]}" '
         f'y2="{plot["bottom"]}" stroke="rgba(234,242,255,.35)" />',
@@ -496,11 +514,39 @@ def _render_validacao_scatter(painel: pd.DataFrame) -> None:
         f'<text x="{corte_x + 8:.1f}" y="{plot["top"] + 14}" '
         'fill="#FF9AAD" font-size="12">ρ = 1</text>',
     ]
+    # Grid lines + tick labels eixo X
+    for v in ticks_x:
+        tx = _tx(v)
+        label = str(int(v))
+        elementos += [
+            f'<line x1="{tx:.1f}" y1="{plot["bottom"]}" x2="{tx:.1f}" '
+            f'y2="{plot["bottom"] + 5}" stroke="rgba(234,242,255,.5)" />',
+            f'<text x="{tx:.1f}" y="{plot["bottom"] + 16}" fill="#8090B0" '
+            f'font-size="10" text-anchor="middle">{label}</text>',
+            f'<line x1="{tx:.1f}" y1="{plot["top"]}" x2="{tx:.1f}" '
+            f'y2="{plot["bottom"]}" stroke="rgba(234,242,255,.08)" />',
+        ]
+    # Grid lines + tick labels eixo Y
+    for pct in ticks_y:
+        ty = _ty(pct)
+        label = f"{int(pct)}%"
+        elementos += [
+            f'<line x1="{plot["left"] - 5}" y1="{ty:.1f}" x2="{plot["left"]}" '
+            f'y2="{ty:.1f}" stroke="rgba(234,242,255,.5)" />',
+            f'<text x="{plot["left"] - 8}" y="{ty + 4:.1f}" fill="#8090B0" '
+            f'font-size="10" text-anchor="end">{label}</text>',
+            f'<line x1="{plot["left"]}" y1="{ty:.1f}" x2="{plot["right"]}" '
+            f'y2="{ty:.1f}" stroke="rgba(234,242,255,.08)" />',
+        ]
+
+    # Pontos (circles) + coordenadas para rótulos
+    pontos_coords: list[tuple[float, float, str, bool]] = []
+    pct_q33 = float(scatter["pct_ate_60d"].quantile(0.33)) * 100
     for grade in range(5):
-        pontos = scatter.loc[scatter["grade"].astype(int) == grade]
-        for _, row in pontos.iterrows():
-            util = float(row["utilizacao"])
-            util = x_max if util == float("inf") else min(util, x_max)
+        pts = scatter.loc[scatter["grade"].astype(int) == grade]
+        for _, row in pts.iterrows():
+            util_raw = float(row["utilizacao"])
+            util = x_max if util_raw == float("inf") else min(util_raw, x_max)
             pct = float(row["pct_ate_60d"]) * 100
             x = plot["left"] + (util / x_max) * largura
             y = plot["bottom"] - min(pct / y_max, 1.0) * altura
@@ -511,6 +557,22 @@ def _render_validacao_scatter(painel: pd.DataFrame) -> None:
                 f'<title>{_html(row["uf"])} · ρ {_pct(row["utilizacao"])} · '
                 f'{_pct_label(row["pct_ate_60d"])}</title></circle>'
             )
+            # Outlier: grade severo, ρ alto, ou pct abaixo do tercil inferior
+            is_outlier = (
+                int(row["grade"]) >= 3
+                or util_raw > 1.5
+                or pct < pct_q33
+            )
+            pontos_coords.append((x, y, str(row["uf"]), is_outlier))
+
+    # Rótulos UF — apenas outliers, renderizados após os círculos (z-order)
+    for x, y, uf, is_outlier in pontos_coords:
+        if is_outlier:
+            elementos.append(
+                f'<text x="{x + 8:.1f}" y="{y - 5:.1f}" fill="rgba(234,242,255,.80)" '
+                f'font-size="9" font-family="monospace">{_html(uf)}</text>'
+            )
+
     svg = (
         '<svg class="rt-val-svg" viewBox="0 0 720 320" role="img" '
         'aria-label="Dispersão entre saturação estrutural e cumprimento em até 60 dias">'
@@ -561,7 +623,7 @@ def render_hero(procedencia: pd.DataFrame) -> None:
         f"""
         <div class="rt-eyebrow rt-anim" style="animation-delay:.02s">RadarRT &middot; Radar de demanda reprimida</div>
         <div class="rt-title rt-anim" style="animation-delay:.10s">A maior barreira da radioterapia<br/>
-          no Brasil e <em>invisível</em>.</div>
+          no Brasil é <em>invisível</em>.</div>
         <div class="rt-sub rt-anim" style="animation-delay:.20s">Cruzamos incidência, produção ambulatorial e o parque
           de aceleradores para tornar a fila do SUS um número auditável por estado.</div>
         <div class="rt-prov rt-anim" style="animation-delay:.30s">
@@ -1113,6 +1175,178 @@ def render_robustez_throughput(
         "tradução para máquinas, pessoas e tempo varia."
     )
 
+def render_serie_temporal(serie: pd.DataFrame) -> None:
+    """Série 2019-2024: oferta realizada contra demanda de referência."""
+    st.markdown('<div class="rt-sec">Cobertura RT-SUS (2019-2024)</div>',
+                unsafe_allow_html=True)
+    tabela = serie.sort_values("ano").copy()
+    tabela["ano"] = tabela["ano"].astype(int)
+    for col in ("oferta_realizada", "demanda_esperada", "gap"):
+        tabela[col] = pd.to_numeric(tabela[col], errors="coerce")
+
+    validas = tabela.dropna(subset=["oferta_realizada", "demanda_esperada"])
+    if validas.empty:
+        st.caption(
+            "serie_temporal.csv existe, mas não há anos com oferta SIA-AR válida "
+            "para desenhar a curva."
+        )
+        return
+
+    primeiro = validas.iloc[0]
+    ultimo = validas.iloc[-1]
+    crescimento = (
+        (float(ultimo["oferta_realizada"]) / float(primeiro["oferta_realizada"]) - 1)
+        * 100
+        if float(primeiro["oferta_realizada"]) > 0 and len(validas) >= 2
+        else None
+    )
+    if crescimento is not None:
+        cobertura_final = (
+            float(ultimo["oferta_realizada"]) / float(ultimo["demanda_esperada"]) * 100
+        )
+        frase = (
+            f"A oferta de radioterapia cresceu {_float_br(crescimento, 1)}% desde "
+            f"{int(primeiro['ano'])} (ano sensível a registro), mas em "
+            f"{int(ultimo['ano'])} ainda cobre só {_float_br(cobertura_final, 1)}% "
+            "da demanda de referência. O gap nacional agregado segue estrutural."
+        )
+    else:
+        frase = (
+            "A oferta de radioterapia é comparada a uma linha de demanda de "
+            "referência; anos sem extração limpa ficam sinalizados, não imputados."
+        )
+    st.markdown(
+        f"""
+        <div class="rt-hook"><span class="rt-hook__dot"></span>
+        <div><b>{_html(frase)}</b></div></div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(_serie_temporal_svg(tabela), unsafe_allow_html=True)
+
+    ausentes = tabela.loc[
+        tabela["codigos_ausentes"].fillna("").astype(str).str.len() > 0,
+        ["ano", "codigos_ausentes"],
+    ]
+    if not ausentes.empty:
+        resumo_ausentes = "; ".join(
+            f"{int(row['ano'])}: {row['codigos_ausentes']}"
+            for _, row in ausentes.iterrows()
+        )
+        st.caption(f"Anos com códigos ausentes ou extração incompleta: {resumo_ausentes}.")
+    st.caption(
+        "Caveat: esta série mostra cobertura nacional agregada, não a fila "
+        "territorial conservadora de 66.539 pacientes. A oferta é por UF do "
+        "estabelecimento; a demanda é linha de referência porque o INCA reestima "
+        "incidência por ciclos. A faixa 2020-2021 marca contexto COVID-19, sem "
+        "inferir queda anual a partir destes dados."
+    )
+
+
+def _serie_temporal_svg(tabela: pd.DataFrame) -> str:
+    anos = tabela["ano"].astype(int).tolist()
+    validas = tabela.dropna(subset=["oferta_realizada", "demanda_esperada"])
+    y_max = float(
+        max(validas["oferta_realizada"].max(), validas["demanda_esperada"].max())
+    )
+    y_max = max(1.0, y_max * 1.10)
+    plot = {"left": 58, "top": 28, "right": 690, "bottom": 280}
+    largura = plot["right"] - plot["left"]
+    altura = plot["bottom"] - plot["top"]
+    ano_min, ano_max = min(anos), max(anos)
+    span = max(1, ano_max - ano_min)
+
+    def tx(ano: float) -> float:
+        return plot["left"] + (float(ano) - ano_min) / span * largura
+
+    def ty(valor: float) -> float:
+        return plot["bottom"] - max(0.0, float(valor)) / y_max * altura
+
+    demanda_pts = [
+        (tx(row["ano"]), ty(row["demanda_esperada"]))
+        for _, row in validas.iterrows()
+    ]
+    oferta_pts = [
+        (tx(row["ano"]), ty(row["oferta_realizada"]))
+        for _, row in validas.iterrows()
+    ]
+
+    def points_attr(pontos: list[tuple[float, float]]) -> str:
+        return " ".join(f"{x:.1f},{y:.1f}" for x, y in pontos)
+
+    step = largura / span
+    band_x = tx(2020) - step * 0.45
+    band_w = tx(2021) - tx(2020) + step * 0.90
+    elementos = [
+        f'<rect x="{band_x:.1f}" y="{plot["top"]}" width="{band_w:.1f}" '
+        f'height="{altura}" fill="rgba(255,174,66,.10)" />',
+        f'<text x="{band_x + 8:.1f}" y="{plot["top"] + 16}" fill="#FFAE42" '
+        'font-size="11">pandemia (COVID-19)</text>',
+        f'<line x1="{plot["left"]}" y1="{plot["bottom"]}" x2="{plot["right"]}" '
+        f'y2="{plot["bottom"]}" stroke="rgba(234,242,255,.35)" />',
+        f'<line x1="{plot["left"]}" y1="{plot["top"]}" x2="{plot["left"]}" '
+        f'y2="{plot["bottom"]}" stroke="rgba(234,242,255,.35)" />',
+    ]
+    if len(demanda_pts) >= 2:
+        area = points_attr(demanda_pts + list(reversed(oferta_pts)))
+        elementos.append(
+            f'<polygon points="{area}" fill="rgba(255,84,112,.18)" '
+            'stroke="none"><title>Área entre demanda e oferta = gap nacional agregado</title></polygon>'
+        )
+    elementos.extend(
+        [
+            f'<polyline points="{points_attr(demanda_pts)}" fill="none" '
+            'stroke="#FF5470" stroke-width="3" stroke-linejoin="round" />',
+            f'<polyline points="{points_attr(oferta_pts)}" fill="none" '
+            'stroke="#3DDCFF" stroke-width="3" stroke-linejoin="round" />',
+        ]
+    )
+    for _, row in validas.iterrows():
+        elementos.append(
+            f'<circle cx="{tx(row["ano"]):.1f}" cy="{ty(row["oferta_realizada"]):.1f}" '
+            'r="4.8" fill="#3DDCFF" stroke="#EAF2FF" stroke-width="1" />'
+        )
+    for ano in anos:
+        x = tx(ano)
+        elementos.extend(
+            [
+                f'<line x1="{x:.1f}" y1="{plot["bottom"]}" x2="{x:.1f}" '
+                f'y2="{plot["bottom"] + 5}" stroke="rgba(234,242,255,.45)" />',
+                f'<text x="{x:.1f}" y="{plot["bottom"] + 20}" fill="#8090B0" '
+                f'font-size="10" text-anchor="middle">{ano}</text>',
+            ]
+        )
+    for valor in (0.0, y_max / 2, y_max):
+        y = ty(valor)
+        elementos.extend(
+            [
+                f'<line x1="{plot["left"] - 5}" y1="{y:.1f}" x2="{plot["left"]}" '
+                f'y2="{y:.1f}" stroke="rgba(234,242,255,.45)" />',
+                f'<text x="{plot["left"] - 8}" y="{y + 4:.1f}" fill="#8090B0" '
+                f'font-size="10" text-anchor="end">{_int_br(valor)}</text>',
+                f'<line x1="{plot["left"]}" y1="{y:.1f}" x2="{plot["right"]}" '
+                f'y2="{y:.1f}" stroke="rgba(234,242,255,.07)" />',
+            ]
+        )
+    elementos.extend(
+        [
+            '<rect x="478" y="36" width="176" height="48" rx="8" '
+            'fill="rgba(7,11,22,.72)" stroke="rgba(132,160,210,.22)" />',
+            '<line x1="494" y1="52" x2="524" y2="52" stroke="#3DDCFF" stroke-width="3" />',
+            '<text x="532" y="56" fill="#EAF2FF" font-size="11">oferta realizada</text>',
+            '<line x1="494" y1="72" x2="524" y2="72" stroke="#FF5470" stroke-width="3" />',
+            '<text x="532" y="76" fill="#EAF2FF" font-size="11">demanda esperada</text>',
+        ]
+    )
+    return (
+        '<svg class="rt-val-svg" viewBox="0 0 720 318" role="img" '
+        'aria-label="Cobertura nacional de radioterapia: oferta realizada contra demanda de referência">'
+        '<text x="24" y="22" fill="#EAF2FF" font-size="14" font-weight="700">'
+        'Cobertura nacional: oferta realizada x demanda de referência</text>'
+        f'{"".join(elementos)}</svg>'
+    )
+
 
 def render_caveats(mart: dict[str, pd.DataFrame]) -> None:
     """Limitações honestas - a diferença entre dashboard bonito e ferramenta."""
@@ -1187,6 +1421,8 @@ def main() -> None:
             render_validacao_painel(mart)
 
     with abas["Robustez"]:
+        if "serie_temporal" in mart:
+            render_serie_temporal(mart["serie_temporal"])
         st.markdown('<div class="rt-sec">Cenários de demanda</div>',
                     unsafe_allow_html=True)
         st.caption("A fila varia com os parâmetros de demanda; o parque (409) "

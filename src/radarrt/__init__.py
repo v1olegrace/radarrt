@@ -11,6 +11,7 @@ from .engine import (
     plano_nacional,
     resumo_nacional,
     sensibilidade_throughput,
+    serie_temporal_oferta,
     simular_uf,
 )
 from .pipeline import BaseRadarRT, Procedencia, construir_base
@@ -37,5 +38,6 @@ __all__ = [
     "ranking_prioridade",
     "resumo_nacional",
     "sensibilidade_throughput",
+    "serie_temporal_oferta",
     "simular_uf",
 ]

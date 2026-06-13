@@ -34,6 +34,9 @@ Thumbs.db
 .idea/
 .vscode/
 
+# Local visual QA screenshots
+verify*.png
+
 # Local delivery/drop folders already consolidated into src/, app/ and tests/
 stage5/
 files*/

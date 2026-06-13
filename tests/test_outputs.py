@@ -22,6 +22,7 @@ def test_outputs_2024_estao_prontos_para_text_to_sql() -> None:
         "procedencia.csv",
         "plano_nacional.csv",
         "cenarios_parque.csv",
+        "serie_temporal.csv",
         "painel_validacao.csv",
         "painel_validacao_regional.csv",
     }
@@ -138,6 +139,29 @@ def test_output_sensibilidade_throughput() -> None:
     assert tabela["deficit_linacs"].tolist() == [201, 126, 86, 59, 44]
     assert tabela["ufs_fila_divergente"].tolist() == [24, 22, 19, 18, 17]
     assert tabela["lsi_nacional"].tolist() == [144.7, 126.6, 112.5, 101.3, 92.1]
+
+
+def test_output_serie_temporal_schema_e_ancora() -> None:
+    serie = pd.read_csv(OUTPUT_DIR / "serie_temporal.csv")
+    resumo = pd.read_csv(OUTPUT_DIR / "resumo_nacional.csv").set_index("metrica")[
+        "valor"
+    ]
+
+    assert list(serie.columns) == [
+        "ano",
+        "oferta_realizada",
+        "demanda_esperada",
+        "gap",
+        "pandemia",
+        "codigos_ausentes",
+    ]
+    assert serie["ano"].tolist() == [2019, 2020, 2021, 2022, 2023, 2024]
+    assert serie["gap"].dropna().ge(0).all()
+    assert serie.loc[serie["ano"].isin([2020, 2021]), "pandemia"].eq(True).all()
+    assert serie.loc[~serie["ano"].isin([2020, 2021]), "pandemia"].eq(False).all()
+    assert round(float(serie.loc[serie["ano"] == 2024, "oferta_realizada"].iloc[0])) == round(
+        float(resumo["oferta_realizada"])
+    )
 
 
 def _valor(df: pd.DataFrame, metrica: str) -> object:

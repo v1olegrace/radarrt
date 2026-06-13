@@ -53,6 +53,7 @@ parque_superior_exp_121_deficit: 86
 throughput_deficits: [201, 126, 86, 59, 44]
 throughput_ufs_fila: [24, 22, 19, 18, 17]
 throughput_lsi: [144.7, 126.6, 112.5, 101.3, 92.1]
+serie_oferta_2024: 141715
 painel_spearman_regional: -0.5
 procedencia_linacs: real (RT2030)
 ```
@@ -68,6 +69,7 @@ Expected outputs:
 - `cenarios_parque.csv`
 - `painel_validacao.csv` (when `data/painel_onco` cache exists)
 - `painel_validacao_regional.csv` (when `data/painel_onco` cache exists)
+- `serie_temporal.csv`
 - `resumo_nacional.csv`
 - `auditoria_base.csv`
 - `procedencia.csv`
@@ -118,8 +120,8 @@ Current RT2030 anchors are locked in the probe: deficit 86, national LSI 112.5,
 grades `[8, 5, 11, 0, 3]`, workforce 86/162/258/506, simulator plans
 86/506/R$860M and 183/1070/R$1.83B, expansion residuals base 86/56/0 and
 superior 196/167/86, throughput sensitivity deficits 201/126/86/59/44, PAINEL
-regional Spearman -0.5 when cache outputs exist, and capacity provenance
-`real (RT2030)`.
+regional Spearman -0.5 when cache outputs exist, coverage-series 2024 offer
+141,715, and capacity provenance `real (RT2030)`.
 
 ## Clean Submission ZIP
 

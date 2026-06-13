@@ -35,6 +35,7 @@ ARQUIVOS_ESPERADOS = {
     "procedencia.csv",
     "plano_nacional.csv",
     "cenarios_parque.csv",
+    "serie_temporal.csv",
 }
 ANCHORS = {
     "demanda_reprimida": 66_539,
@@ -64,6 +65,7 @@ ANCHORS = {
     "throughput_deficits": [201, 126, 86, 59, 44],
     "throughput_ufs_fila": [24, 22, 19, 18, 17],
     "throughput_lsi": [144.7, 126.6, 112.5, 101.3, 92.1],
+    "serie_oferta_2024": 141_715,
 }
 
 
@@ -91,6 +93,7 @@ def auditar_outputs(output_dir: str | Path = "data/outputs_2024") -> ProbeOutput
     plano = pd.read_csv(pasta / "plano_nacional.csv")
     cenarios_parque = pd.read_csv(pasta / "cenarios_parque.csv")
     sensibilidade_thr = pd.read_csv(pasta / "sensibilidade_throughput.csv")
+    serie_temporal = pd.read_csv(pasta / "serie_temporal.csv")
     painel_validacao = _ler_csv_opcional(pasta / "painel_validacao.csv")
     painel_regional = _ler_csv_opcional(pasta / "painel_validacao_regional.csv")
 
@@ -144,6 +147,16 @@ def auditar_outputs(output_dir: str | Path = "data/outputs_2024") -> ProbeOutput
         "throughput_lsi": [
             round(float(valor), 1) for valor in sensibilidade_thr["lsi_nacional"].tolist()
         ],
+        "serie_oferta_2024": int(
+            round(
+                float(
+                    serie_temporal.loc[
+                        serie_temporal["ano"].astype(int) == 2024,
+                        "oferta_realizada",
+                    ].iloc[0]
+                )
+            )
+        ),
         "procedencia": proc_idx.to_dict(),
     }
     if painel_regional is not None:
@@ -268,6 +281,12 @@ def auditar_outputs(output_dir: str | Path = "data/outputs_2024") -> ProbeOutput
             anchors["throughput_lsi"],
             ANCHORS["throughput_lsi"],
         ),
+        _check_serie_temporal(serie_temporal, float(resumo_idx["demanda_rt_sus"])),
+        _check_anchor(
+            "serie de cobertura: oferta 2024",
+            anchors["serie_oferta_2024"],
+            ANCHORS["serie_oferta_2024"],
+        ),
         *_checks_painel_opcional(
             painel_validacao,
             painel_regional,
@@ -374,6 +393,38 @@ def _check_throughput_schema(tabela: pd.DataFrame) -> v.Check:
         "Sensibilidade throughput: schema e faixa",
         passou,
         f"throughputs={tabela['throughput'].tolist()}",
+    )
+
+
+def _check_serie_temporal(tabela: pd.DataFrame, demanda_esperada: float) -> v.Check:
+    colunas = [
+        "ano",
+        "oferta_realizada",
+        "demanda_esperada",
+        "gap",
+        "pandemia",
+        "codigos_ausentes",
+    ]
+    anos = tabela["ano"].astype(int).tolist() if "ano" in tabela.columns else []
+    schema_ok = list(tabela.columns) == colunas
+    anos_ok = anos == [2019, 2020, 2021, 2022, 2023, 2024]
+    pandemia_ok = (
+        set(tabela.loc[tabela["pandemia"].astype(bool), "ano"].astype(int))
+        == {2020, 2021}
+        if schema_ok
+        else False
+    )
+    demanda_ok = (
+        tabela["demanda_esperada"].dropna().eq(demanda_esperada).all()
+        if schema_ok
+        else False
+    )
+    gap_ok = tabela["gap"].dropna().ge(0).all() if schema_ok else False
+    passou = schema_ok and anos_ok and pandemia_ok and demanda_ok and gap_ok
+    return v.Check(
+        "Serie de cobertura: schema, anos, demanda e contexto COVID",
+        bool(passou),
+        f"anos={anos}; demanda={demanda_esperada:.0f}",
     )
 
 

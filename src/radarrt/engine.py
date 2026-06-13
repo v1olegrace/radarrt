@@ -40,6 +40,62 @@ def demanda_reprimida(demanda: float, oferta_realizada: float) -> float:
     return max(demanda - oferta_realizada, 0.0)
 
 
+def serie_temporal_oferta(
+    oferta_anual: pd.DataFrame,
+    demanda_esperada: float,
+    params: Params = CENARIOS["base"],
+) -> pd.DataFrame:
+    """Serie nacional: oferta realizada x demanda esperada.
+
+    Retorna colunas [ano, oferta_realizada, demanda_esperada, gap, pandemia].
+    A demanda e linha de referencia; buracos de ano permanecem explicitos.
+    """
+    del params
+    if demanda_esperada < 0:
+        raise ValueError("demanda_esperada nao pode ser negativa")
+    faltando = [
+        col
+        for col in ("ano", schemas.COL_UF, "oferta_realizada")
+        if col not in oferta_anual.columns
+    ]
+    if faltando:
+        raise ValueError(f"Colunas ausentes para serie temporal: {faltando}")
+    if oferta_anual.empty:
+        return pd.DataFrame(
+            columns=[
+                "ano",
+                "oferta_realizada",
+                "demanda_esperada",
+                "gap",
+                "pandemia",
+            ]
+        )
+
+    tabela = oferta_anual.copy()
+    tabela["ano"] = tabela["ano"].astype(int)
+    tabela["oferta_realizada"] = pd.to_numeric(
+        tabela["oferta_realizada"],
+        errors="coerce",
+    )
+    anos = sorted(tabela["ano"].unique())
+    todos_anos = list(range(min(anos), max(anos) + 1))
+    serie = (
+        tabela.groupby("ano", sort=True)["oferta_realizada"]
+        .sum(min_count=1)
+        .reindex(todos_anos)
+        .rename_axis("ano")
+        .reset_index()
+    )
+    serie["demanda_esperada"] = float(demanda_esperada)
+    serie["gap"] = (serie["demanda_esperada"] - serie["oferta_realizada"]).clip(
+        lower=0
+    )
+    serie["pandemia"] = serie["ano"].isin((2020, 2021))
+    return serie[
+        ["ano", "oferta_realizada", "demanda_esperada", "gap", "pandemia"]
+    ]
+
+
 def linac_shortage_index(
     pacientes_rt: float, n_linacs: int, params: Params
 ) -> float:

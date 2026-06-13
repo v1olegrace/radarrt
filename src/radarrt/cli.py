@@ -20,9 +20,11 @@ from . import (
     resumo_nacional,
     schemas,
     sensibilidade_throughput,
+    serie_temporal_oferta,
 )
 from . import validation as validation_mod
 from .sources import painel as painel_mod
+from .sources import sia_temporal as sia_temporal_mod
 
 
 def _metrics_to_frame(valores: dict[str, object]) -> pd.DataFrame:
@@ -87,6 +89,46 @@ def _validacao_painel(
     return validacao, regional
 
 
+def _serie_temporal(base: pd.DataFrame, resumo: dict[str, float]) -> pd.DataFrame:
+    """Generate the 2019-2024 national offer-vs-demand series."""
+    anos = sia_temporal_mod.ANOS_SERIE_TEMPORAL
+    codigos = sia_temporal_mod.CODIGOS_RADIOTERAPIA_EXTERNA
+    ausentes = sia_temporal_mod.checar_consistencia_codigos(anos, codigos)
+    oferta_anual = sia_temporal_mod.ingerir_oferta_anual(anos, codigos)
+
+    oferta_2024 = base[[schemas.COL_UF, schemas.COL_OFERTA_APAC]].rename(
+        columns={schemas.COL_OFERTA_APAC: "oferta_realizada"}
+    )
+    oferta_2024.insert(0, "ano", 2024)
+    oferta_anual = pd.concat(
+        [
+            oferta_anual.loc[oferta_anual["ano"].astype(int) != 2024],
+            oferta_2024,
+        ],
+        ignore_index=True,
+    )
+    ausentes[2024] = []
+
+    serie = serie_temporal_oferta(
+        oferta_anual,
+        demanda_esperada=float(resumo["demanda_rt_sus"]),
+        params=CENARIOS["base"],
+    )
+    serie["codigos_ausentes"] = serie["ano"].map(
+        lambda ano: ";".join(ausentes.get(int(ano), []))
+    )
+    return serie[
+        [
+            "ano",
+            "oferta_realizada",
+            "demanda_esperada",
+            "gap",
+            "pandemia",
+            "codigos_ausentes",
+        ]
+    ]
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Create the CLI parser shared by scripts and console entry points."""
     parser = argparse.ArgumentParser(description="Executa indicadores RadarRT.")
@@ -131,6 +173,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         ]
     )
     cenarios_parque = _cenarios_parque(base.dados)
+    serie_temporal = _serie_temporal(base.dados, resumo)
     painel_validacao, painel_regional = _validacao_painel(calc)
 
     export_dir = Path(args.export_dir)
@@ -142,6 +185,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     sensibilidade_thr.to_csv(export_dir / "sensibilidade_throughput.csv", index=False)
     plano.to_csv(export_dir / "plano_nacional.csv", index=False)
     cenarios_parque.to_csv(export_dir / "cenarios_parque.csv", index=False)
+    serie_temporal.to_csv(export_dir / "serie_temporal.csv", index=False)
     if painel_validacao is not None and painel_regional is not None:
         painel_validacao.to_csv(export_dir / "painel_validacao.csv", index=False)
         painel_regional.to_csv(export_dir / "painel_validacao_regional.csv", index=False)

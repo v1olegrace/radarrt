@@ -37,6 +37,7 @@ from radarrt import (  # noqa: E402
     resumo_nacional,
     schemas,
     sensibilidade_throughput,
+    serie_temporal_oferta,
 )
 from radarrt import (  # noqa: E402
     validation as validation_mod,
@@ -44,6 +45,7 @@ from radarrt import (  # noqa: E402
 from radarrt.config import CENARIOS  # noqa: E402
 from radarrt.sources import painel as painel_mod  # noqa: E402
 from radarrt.sources import parque as parque_mod  # noqa: E402
+from radarrt.sources import sia_temporal as sia_temporal_mod  # noqa: E402
 
 
 def _metrics_to_frame(metricas: dict[str, object]) -> pd.DataFrame:
@@ -78,6 +80,7 @@ def regerar(output_dir: Path, csv_parque: Path) -> dict[str, object]:
         ]
     )
     cenarios_parque = _cenarios_parque(base)
+    serie_temporal = _serie_temporal(base, resumo)
     validacao_painel, validacao_painel_regional, aviso_painel = _validacao_painel(calc)
 
     # Procedencia derivada da coluna 'fonte' do parque (igual ao pipeline).
@@ -103,6 +106,7 @@ def regerar(output_dir: Path, csv_parque: Path) -> dict[str, object]:
     )
     plano.to_csv(output_dir / "plano_nacional.csv", index=False)
     cenarios_parque.to_csv(output_dir / "cenarios_parque.csv", index=False)
+    serie_temporal.to_csv(output_dir / "serie_temporal.csv", index=False)
     if validacao_painel is not None and validacao_painel_regional is not None:
         validacao_painel.to_csv(output_dir / "painel_validacao.csv", index=False)
         validacao_painel_regional.to_csv(
@@ -132,6 +136,7 @@ def regerar(output_dir: Path, csv_parque: Path) -> dict[str, object]:
         "deficit_tecnico_rtt": int(resumo["deficit_tecnico_rtt"]),
         "deficit_profissionais_total": int(resumo["deficit_profissionais_total"]),
         "procedencia_linacs": linacs_proc,
+        "serie_temporal": f"{len(serie_temporal)} anos",
         "painel_onco": aviso_painel or "validacao externa gerada",
     }
 
@@ -196,6 +201,48 @@ def _validacao_painel(
         .reset_index(drop=True)
     )
     return validacao, regional, None
+
+
+def _serie_temporal(base: pd.DataFrame, resumo: dict[str, float]) -> pd.DataFrame:
+    """Gera a serie nacional SIA-AR 2019-2024 com flags de consistencia."""
+    anos = sia_temporal_mod.ANOS_SERIE_TEMPORAL
+    codigos = sia_temporal_mod.CODIGOS_RADIOTERAPIA_EXTERNA
+
+    ausentes = sia_temporal_mod.checar_consistencia_codigos(anos, codigos)
+    oferta_anual = sia_temporal_mod.ingerir_oferta_anual(anos, codigos)
+
+    # A serie contextualiza o mart; a ancora 2024 vem da base canonica auditada.
+    oferta_2024 = base[[schemas.COL_UF, schemas.COL_OFERTA_APAC]].rename(
+        columns={schemas.COL_OFERTA_APAC: "oferta_realizada"}
+    )
+    oferta_2024.insert(0, "ano", 2024)
+    oferta_anual = pd.concat(
+        [
+            oferta_anual.loc[oferta_anual["ano"].astype(int) != 2024],
+            oferta_2024,
+        ],
+        ignore_index=True,
+    )
+    ausentes[2024] = []
+
+    serie = serie_temporal_oferta(
+        oferta_anual,
+        demanda_esperada=float(resumo["demanda_rt_sus"]),
+        params=CENARIOS["base"],
+    )
+    serie["codigos_ausentes"] = serie["ano"].map(
+        lambda ano: ";".join(ausentes.get(int(ano), []))
+    )
+    return serie[
+        [
+            "ano",
+            "oferta_realizada",
+            "demanda_esperada",
+            "gap",
+            "pandemia",
+            "codigos_ausentes",
+        ]
+    ]
 
 
 def main(argv: list[str] | None = None) -> int:

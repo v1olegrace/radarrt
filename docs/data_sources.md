@@ -30,6 +30,33 @@ SIA-AR offer is counted by UF of the treatment establishment (`AP_UFMUN`). It is
 not yet reassigned by patient residence (`AP_MUNPCN`), so UF-level rankings show
 local treatment delivery rather than resident demand capture.
 
+## SIA-AR Coverage Series 2019-2024
+
+`data/outputs_2024/serie_temporal.csv` adds a national coverage view for
+2019-2024: delivered SIA-AR offer versus the RT-SUS demand reference line. The
+offer side uses the same SIA-AR external-radiotherapy procedure set as the 2024
+mart (`radarrt.sources.sia.PROC_RADIOTERAPIA_EXTERNA`), so the 2024 point must
+match `resumo_nacional.csv/oferta_realizada` exactly.
+
+Before the national series is assembled, RadarRT checks every year for the full
+procedure-code set. Missing codes are written to `codigos_ausentes`; years with
+incomplete extraction are flagged rather than silently compared as complete.
+
+The demand side is a reference line, currently the base-scenario national
+RT-SUS demand from the mart. It is not treated as a precise annual series
+because INCA incidence is reestimated by multi-year cycles, not annually. The
+resulting `gap` is a national aggregate coverage gap, not the territorial
+conservative backlog used as the hero figure in the mart. In the current
+outputs, the coverage-series 2024 gap is 65,393, while the mart backlog remains
+66,539 patients after summing non-transferable UF deficits.
+
+The 2019 point is useful for reproducibility, but it should be read with a
+registration caveat: lower recorded offer in that year may reflect procedure
+coverage or extraction completeness rather than a real clinical production
+floor. The 2020-2021 interval is marked only as COVID-19 context. The current
+series does not support a production-drop narrative because recorded offer
+increases from 2019 to 2020.
+
 ## External Validation: PAINEL-Oncologia
 
 `data/painel_onco/painel_rt_{ano}.csv` caches the official PAINEL-Oncologia

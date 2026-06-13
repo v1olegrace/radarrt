@@ -15,6 +15,8 @@ para explorar gargalos agregados e explicitar incertezas dos dados.
 - Indicadores de demanda, oferta, LSI, grade de prioridade e déficit de LINACs.
 - Análise de sensibilidade para cenários conservador, base e superior.
 - Análise de robustez por throughput de LINAC, de 350 a 550 cursos/máquina/ano.
+- Série de cobertura RT-SUS 2019-2024: oferta SIA-AR realizada contra demanda
+  nacional de referência, com caveat explícito para 2019.
 - CSVs planos prontos para dashboard, notebook ou agente SQL.
 - Agente conversacional PT-BR determinístico que gera apenas `SELECT` validado.
 - Laudo offline de validação científica e operacional.
@@ -29,6 +31,7 @@ para explorar gargalos agregados e explicitar incertezas dos dados.
 - [x] Dashboard Streamlit de demo com mapa, ranking, robustez, validação e agente.
 - [x] Narrativa de pitch e limitações metodológicas documentadas.
 - [x] Anchors do mart RT2030 real re-travados nos testes e no probe operacional.
+- [x] Série de cobertura nacional 2019-2024 versionada e auditada offline.
 
 ## Documentação
 
@@ -133,6 +136,7 @@ data/outputs_2024/plano_nacional.csv
 data/outputs_2024/cenarios_parque.csv
 data/outputs_2024/painel_validacao.csv
 data/outputs_2024/painel_validacao_regional.csv
+data/outputs_2024/serie_temporal.csv
 ```
 
 These files are intentionally versioned because tests and demos use them as the
@@ -236,6 +240,14 @@ deficit calculations. In the current cache, regional Spearman between rho and
 `pct_ate_60d` is `-0.500`; the UF correlation is `-0.100` and remains
 exploratory because the view is by treatment UF.
 
+The SIA-AR coverage series (`serie_temporal.csv`) is intentionally named as
+coverage, not backlog. It compares national delivered external-radiotherapy
+offer with the mart demand reference line from 2019 to 2024. The 2024 aggregate
+gap is 65,393, while the headline backlog remains the territorial conservative
+sum of UF deficits: 66,539 patients. The 2019 point is reproducible but should
+be presented with a registration caveat; the current data do not show a
+production drop from 2019 to 2020.
+
 ## Scientific Caveat
 
 The 2024 output mart uses real SIA-AR offer, INCA 2026 incidence and the
@@ -255,9 +267,10 @@ python scripts/probe_outputs.py
 .\.venv311\Scripts\python.exe run_indicadores.py
 ```
 
-Current local validation: 110/110 tests passing, ruff clean, operational
-probe 49/49 blocking checks OK with one methodological alert, and Playwright
-visual smoke checked for the Streamlit map and PAINEL validation tab.
+Current local validation: 116/116 tests passing, ruff clean, operational
+probe 51/51 blocking checks OK with one methodological alert, and Playwright
+visual smoke checked for the Streamlit map, PAINEL validation tab and coverage
+series block.
 
 GitHub Actions runs tests and lint on Python 3.11 and 3.13.
 
